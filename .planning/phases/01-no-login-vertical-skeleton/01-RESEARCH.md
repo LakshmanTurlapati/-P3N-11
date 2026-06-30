@@ -68,6 +68,8 @@ Current registry pins were checked on 2026-06-30: `next` 16.2.9, `react` 19.2.7,
 
 **Primary recommendation:** Build the root route as a server-rendered App Router studio shell with a client-only voice selector and approval badge, enforce rights on the API boundary with a typed voice-profile schema, and keep all speech backends behind `Protocol`-based provider adapters so Phase 2 can swap real providers without changing the UI contract. [CITED: .planning/phases/01-no-login-vertical-skeleton/01-CONTEXT.md; https://nextjs.org/docs/app; https://fastapi.tiangolo.com/tutorial/body/; https://docs.python.org/3/library/typing.html]
 
+Phase 1 keeps the stub-generation implementation inline in `services/api`; `services/speech-worker` holds the typed contracts and stub adapter boundary for future extraction, not a separately running worker process in this phase. [CITED: .planning/phases/01-no-login-vertical-skeleton/01-CONTEXT.md; .planning/research/ARCHITECTURE.md]
+
 ## Architectural Responsibility Map
 
 | Capability | Primary Tier | Secondary Tier | Rationale |
@@ -76,7 +78,7 @@ Current registry pins were checked on 2026-06-30: `next` 16.2.9, `react` 19.2.7,
 | No-login routing | Frontend Server | Browser / Client | The root route `/` should open the studio directly, and App Router is the layer that owns that route shape. [CITED: .planning/phases/01-no-login-vertical-skeleton/01-CONTEXT.md; https://nextjs.org/docs/app/api-reference/file-conventions/layout] |
 | Voice profile schema and approval badge | API / Backend | Browser / Client | Rights state must come from the server-controlled registry; the browser only renders it. [CITED: .planning/phases/01-no-login-vertical-skeleton/01-CONTEXT.md; .planning/research/ARCHITECTURE.md] |
 | Rights-gated generation block | API / Backend | Database / Storage | The backend has to reject unapproved or incomplete profiles even when the UI already disables generation. [CITED: .planning/phases/01-no-login-vertical-skeleton/01-CONTEXT.md; https://fastapi.tiangolo.com/tutorial/body/] |
-| Provider interface + stub generation path | API / Backend | Speech Worker | Provider contracts belong behind a backend boundary so the first stub can later be replaced with real VAD/STT/TTS/S2S providers. [CITED: .planning/research/ARCHITECTURE.md; https://docs.python.org/3/library/typing.html; https://docs.python.org/3/library/abc.html] |
+| Provider interface + stub generation path | API / Backend | Speech Worker | Phase 1 keeps stub generation inline in the API control plane; `services/speech-worker` owns the typed contracts and stub adapter boundary for future extraction. [CITED: .planning/research/ARCHITECTURE.md; https://docs.python.org/3/library/typing.html; https://docs.python.org/3/library/abc.html] |
 
 ## Standard Stack
 
@@ -361,22 +363,22 @@ class VADProvider(Protocol):
 
 > None. All planning-critical claims were cited from project docs, official docs, or verified local commands; suspicious registry observations are tracked in the package audit rather than treated as assumptions.
 
-## Open Questions
+## Resolved Decisions
 
-1. **Resolved: Phase 1 Python toolchain**
+1. **Phase 1 Python toolchain**
    - What we know: `uv` is missing in the current environment, while `python3` and `pip3` are present. [VERIFIED: local command]
    - Decision: use `uv` for Phase 1 and validate or install it in Wave 0. If `uv` cannot be installed or run, use `python -m venv` + `pip` for the same scaffold step and do not mix toolchains.
    - Recommendation: keep the Wave 0 checkpoint explicit so the backend scaffold and validation commands stay on one Python path.
 
-2. **Should the first stub generation path live inline in the API control plane or in a separate `services/speech-worker` stub service?**
+2. **Phase 1 stub generation placement**
    - What we know: the architecture guidance prefers a separate worker boundary, but Phase 1 only needs a stub result. [CITED: .planning/research/ARCHITECTURE.md]
-   - What's unclear: whether the initial stub should be an in-process adapter or a separate internal service.
-   - Recommendation: keep the contract in `services/speech-worker` even if the first stub implementation is thin or inline.
+   - Decision: implement the stub generation path inline in the API control plane for Phase 1, while keeping `services/speech-worker/providers/contracts.py` and the stub adapter shape available for future worker extraction.
+   - Recommendation: do not add a separately running `services/speech-worker` process in this phase.
 
-3. **Should exact patch pins for the SUS packages be locked before planning starts, or after a checkpointed human review?**
+3. **SUS package pin review**
    - What we know: the current releases for `next`, `react`, `react-dom`, `fastapi`, `pydantic`, and `uvicorn` were flagged `SUS` by the legitimacy gate. [VERIFIED: local command]
-   - What's unclear: whether the team wants to accept those exact patches now or adjust the install set after review.
-   - Recommendation: keep them behind `checkpoint:human-verify` tasks and let the planner lock them only after review.
+   - Decision: keep exact SUS pins behind `checkpoint:human-verify` tasks and let execution pin only approved versions after registry/source review.
+   - Recommendation: retain the Wave 0 legitimacy checkpoint so install choices stay reviewable.
 
 ## Environment Availability
 

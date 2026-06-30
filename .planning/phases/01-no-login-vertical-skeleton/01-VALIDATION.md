@@ -19,7 +19,7 @@ created: 2026-06-30
 |----------|-------|
 | **Framework** | `pytest` for API/provider tests via `uv run` when available; Playwright for web studio smoke tests |
 | **Config file** | `pyproject.toml` for Python test config and `apps/web/playwright.config.ts` for browser smoke tests |
-| **Quick run command** | `uv run pytest -q` plus targeted `pnpm --dir apps/web exec playwright test tests/root-route.spec.ts` after web smoke tests exist |
+| **Quick run command** | `uv run pytest -q` plus targeted `pnpm --dir apps/web exec playwright test tests/root-route.spec.ts tests/studio-generation.spec.ts` after web smoke tests exist |
 | **Full suite command** | `uv run pytest` and `pnpm --dir apps/web exec playwright test` |
 | **Estimated runtime** | unknown until Wave 0 installs dependencies |
 
@@ -45,6 +45,7 @@ created: 2026-06-30
 | 01-02-03 | 01-02 | 0 | GOV-03 | T-03 | Bundled profile avoids protected character or actor identity claims | fixture/snapshot | `uv run pytest services/api/tests/test_voice_profile.py -q` | no - Wave 0 | pending |
 | 01-03-01 | 01-03 | 0 | PIPE-01 | T-04 | Provider interfaces exist for VAD, STT, TTS, and speech-to-speech candidates | unit | `uv run pytest services/speech-worker/tests/test_provider_contracts.py -q` | no - Wave 0 | pending |
 | 01-03-02 | 01-03 | 0 | PIPE-01 | T-04 | Rights-gated stub generation returns structured metadata only | unit/integration | `uv run pytest services/api/tests/test_generate_stub.py -q` | no - Wave 0 | pending |
+| 01-03-03 | 01-03 | 0 | PIPE-01 | T-04 | StudioShell posts to the generation route and renders the structured metadata result card | browser integration | `pnpm --dir apps/web exec playwright test tests/studio-generation.spec.ts` | no - Wave 0 | pending |
 
 ---
 
@@ -52,6 +53,7 @@ created: 2026-06-30
 
 - [ ] `pyproject.toml` test config and `apps/web/playwright.config.ts` for web smoke tests.
 - [ ] `apps/web/tests/root-route.spec.ts` covering the root studio route and bundled voice selector.
+- [ ] `apps/web/tests/studio-generation.spec.ts` covering the studio trigger, API request, and structured metadata result card.
 - [ ] `services/api/tests/test_rights_gate.py`, `services/api/tests/test_voice_profile.py`, `services/api/tests/test_generate_stub.py`, and `services/speech-worker/tests/test_provider_contracts.py` covering the Phase 1 backend and provider checks.
 - [ ] `uv` is the selected Phase 1 Python toolchain; use `python -m venv` + `pip` only if `uv` cannot be installed or run in Wave 0.
 
