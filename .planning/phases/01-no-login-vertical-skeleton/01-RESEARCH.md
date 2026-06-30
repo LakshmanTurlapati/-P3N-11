@@ -110,7 +110,12 @@ Version snapshot on 2026-06-30: `next` 16.2.9, `react` 19.2.7, `react-dom` 19.2.
 **Installation:**
 ```bash
 pnpm add next react react-dom typescript
-pip install fastapi pydantic uvicorn
+uv venv
+uv pip install fastapi pydantic uvicorn pytest
+
+# fallback only if uv is unavailable
+python -m venv .venv
+pip install fastapi pydantic uvicorn pytest
 ```
 
 If the phase owner wants the exact patch pins from the registry snapshot, keep them behind human-verify checkpoints because the current `next` / `react` / `fastapi` / `pydantic` / `uvicorn` releases were flagged `SUS` by the legitimacy gate. [VERIFIED: local command]
@@ -358,10 +363,10 @@ class VADProvider(Protocol):
 
 ## Open Questions
 
-1. **Should the phase use `uv` now or stay on `pip` + `venv` for the Python skeleton?**
+1. **Resolved: Phase 1 Python toolchain**
    - What we know: `uv` is missing in the current environment, while `python3` and `pip3` are present. [VERIFIED: local command]
-   - What's unclear: whether the phase owner wants to install `uv` immediately or use the available fallback for Phase 1.
-   - Recommendation: plan a small environment-decision task before Wave 0 so the backend scaffold uses one toolchain consistently.
+   - Decision: use `uv` for Phase 1 and validate or install it in Wave 0. If `uv` cannot be installed or run, use `python -m venv` + `pip` for the same scaffold step and do not mix toolchains.
+   - Recommendation: keep the Wave 0 checkpoint explicit so the backend scaffold and validation commands stay on one Python path.
 
 2. **Should the first stub generation path live inline in the API control plane or in a separate `services/speech-worker` stub service?**
    - What we know: the architecture guidance prefers a separate worker boundary, but Phase 1 only needs a stub result. [CITED: .planning/research/ARCHITECTURE.md]
@@ -382,7 +387,7 @@ class VADProvider(Protocol):
 | pnpm | Preferred frontend package manager | ✓ | `10.30.3` [VERIFIED: local command] | `npm` |
 | Python 3 | FastAPI control plane scaffold | ✓ | `3.13.5` [VERIFIED: local command] | — |
 | pip | Python package installation | ✓ | `25.1.1` [VERIFIED: local command] | — |
-| uv | Recommended Python environment manager | ✗ | — [VERIFIED: local command] | Use `python -m venv` + `pip`, or install `uv` in Wave 0 |
+| uv | Recommended Python environment manager | ✗ | — [VERIFIED: local command] | Install and validate `uv` in Wave 0; use `python -m venv` + `pip` only if `uv` cannot be installed or run |
 | pytest | Backend/API test runner | ✗ | — [VERIFIED: local command] | Install `pytest` in Wave 0 |
 | Playwright | Browser smoke tests for the studio shell | ✗ | — [VERIFIED: local command] | Install `@playwright/test` in Wave 0 or defer browser smoke until installed |
 
@@ -400,30 +405,30 @@ class VADProvider(Protocol):
 | Property | Value |
 |----------|-------|
 | Framework | `pytest` for API/provider tests; Playwright for web smoke tests once installed |
-| Config file | none yet - the phase must create `pytest.ini` or `pyproject.toml` test config and `playwright.config.ts` |
-| Quick run command | `pytest -q` and `pnpm playwright test --grep studio` |
-| Full suite command | `pytest` and `pnpm playwright test` |
+| Config file | `pyproject.toml` test config and `apps/web/playwright.config.ts` |
+| Quick run command | `uv run pytest -q` and `pnpm --dir apps/web exec playwright test tests/root-route.spec.ts` |
+| Full suite command | `uv run pytest` and `pnpm --dir apps/web exec playwright test` |
 
 ### Phase Requirements → Test Map
 | Req ID | Behavior | Test Type | Automated Command | File Exists? |
 |--------|-----------|-----------|-------------------|-------------|
-| GOV-01 | Generation is blocked unless the voice profile has explicit rights metadata | unit/integration | `pytest tests/api/test_rights_gate.py -q` | ❌ Wave 0 |
-| GOV-02 | Unapproved profiles cannot generate | unit/integration | `pytest tests/api/test_rights_gate.py -q` | ❌ Wave 0 |
-| GOV-03 | Bundled voice data never frames Vesper Glass as Loki or Tom Hiddleston | fixture/snapshot | `pytest tests/fixtures/test_voice_profile.py -q` | ❌ Wave 0 |
-| STUD-01 | Root route opens the studio directly | browser smoke | `pnpm playwright test tests/web/studio.spec.ts --grep root-route` | ❌ Wave 0 |
-| STUD-02 | Bundled Vesper Glass voice is selectable and shows approval status | browser smoke | `pnpm playwright test tests/web/studio.spec.ts --grep voice-selector` | ❌ Wave 0 |
-| PIPE-01 | Provider interfaces exist for VAD, STT, TTS, and speech-to-speech candidates | unit | `pytest tests/providers/test_contracts.py -q` | ❌ Wave 0 |
+| GOV-01 | Generation is blocked unless the voice profile has explicit rights metadata | unit/integration | `uv run pytest services/api/tests/test_rights_gate.py -q` | ❌ Wave 0 |
+| GOV-02 | Unapproved profiles cannot generate | unit/integration | `uv run pytest services/api/tests/test_rights_gate.py -q` | ❌ Wave 0 |
+| GOV-03 | Bundled voice data never frames Vesper Glass as Loki or Tom Hiddleston | fixture/snapshot | `uv run pytest services/api/tests/test_voice_profile.py -q` | ❌ Wave 0 |
+| STUD-01 | Root route opens the studio directly | browser smoke | `pnpm --dir apps/web exec playwright test tests/root-route.spec.ts` | ❌ Wave 0 |
+| STUD-02 | Bundled Vesper Glass voice is selectable and shows approval status | browser smoke | `pnpm --dir apps/web exec playwright test tests/root-route.spec.ts` | ❌ Wave 0 |
+| PIPE-01 | Provider interfaces exist for VAD, STT, TTS, and speech-to-speech candidates | unit | `uv run pytest services/speech-worker/tests/test_provider_contracts.py -q` | ❌ Wave 0 |
+| PIPE-01 | Rights-gated stub generation returns structured metadata only | unit/integration | `uv run pytest services/api/tests/test_generate_stub.py -q` | ❌ Wave 0 |
 
 ### Sampling Rate
-- **Per task commit:** `pytest -q` once the first backend tests exist, plus the smallest relevant Playwright grep for studio smoke once the browser scaffold exists.
-- **Per wave merge:** `pytest` and `pnpm playwright test`.
+- **Per task commit:** `uv run pytest -q` once the first backend tests exist, plus the smallest relevant Playwright run for studio smoke once the browser scaffold exists.
+- **Per wave merge:** `uv run pytest` and `pnpm --dir apps/web exec playwright test`.
 - **Phase gate:** Full suite green before `$gsd-verify-work`.
 
 ### Wave 0 Gaps
-- `pytest.ini` or `pyproject.toml` test config - missing and must be created.
-- `playwright.config.ts` - missing and must be created if browser smoke is part of the first wave.
-- `tests/` directories and initial fixtures for API, provider contracts, and studio smoke tests - missing.
-- Tool installation for `pytest` and `@playwright/test` - missing from the current environment.
+- `pyproject.toml` test config and `apps/web/playwright.config.ts` - missing and must be created.
+- `services/api/tests/test_rights_gate.py`, `services/api/tests/test_voice_profile.py`, `services/api/tests/test_generate_stub.py`, `services/speech-worker/tests/test_provider_contracts.py`, and `apps/web/tests/root-route.spec.ts` - missing.
+- Tool installation for `uv`, `pytest`, and `@playwright/test` - missing from the current environment, with `python -m venv` + `pip` as fallback only if `uv` cannot be installed or run.
 
 ## Security Domain
 
