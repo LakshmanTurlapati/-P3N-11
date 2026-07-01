@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 GenerationProviderType = Literal["metadata-only-stub"]
 GenerationResultStatus = Literal["metadata-only"]
@@ -76,16 +76,11 @@ class GenerationTiming(BaseModel):
     ended_at: datetime
     duration_ms: int = Field(ge=0)
 
-    @field_validator("ended_at")
-    @classmethod
-    def _require_end_after_start(cls, value: datetime, info: object) -> datetime:
-        started_at = getattr(getattr(info, "data", {}), "get", lambda _key, _default=None: None)(
-            "started_at",
-            None,
-        )
-        if isinstance(started_at, datetime) and value < started_at:
+    @model_validator(mode="after")
+    def _require_end_after_start(self) -> "GenerationTiming":
+        if self.ended_at < self.started_at:
             raise ValueError("ended_at must be greater than or equal to started_at")
-        return value
+        return self
 
 
 class GenerationResult(BaseModel):
