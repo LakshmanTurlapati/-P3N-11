@@ -37,12 +37,17 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. Provider contracts exist for VAD, STT, TTS, and speech-to-speech candidates.
   5. The first voice is described as an original theatrical voice, not as a protected character or actor clone.
 
-**Plans**: 3 plans
+**Plans**: 1/3 plans executed
 
 Plans:
+
+- [x] 01-01-PLAN.md
+- [ ] 01-02-PLAN.md
+- [ ] 01-03-PLAN.md
+
 **Wave 1**
 
-- [ ] 01-01: Web studio shell and no-login routing
+- [x] 01-01: Web studio shell and no-login routing
 - [ ] 01-02: Voice profile schema and consent enforcement
 
 **Wave 2** *(blocked on Wave 1 completion)*
@@ -171,7 +176,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. No-Login Vertical Skeleton | 0/3 | Not started | - |
+| 1. No-Login Vertical Skeleton | 1/3 | In Progress|  |
 | 2. Consented Studio Generation | 0/3 | Not started | - |
 | 3. Audio Input and Turn Detection | 0/3 | Not started | - |
 | 4. Live Conversation Mode | 0/3 | Not started | - |

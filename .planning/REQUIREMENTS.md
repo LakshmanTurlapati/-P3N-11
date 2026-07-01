@@ -11,13 +11,13 @@ Requirements for the initial internal no-login web app. Each maps to exactly one
 
 - [ ] **GOV-01**: User can only generate with a voice profile that has explicit rights metadata.
 - [ ] **GOV-02**: System blocks generation requests for voice profiles that are not approved for generation.
-- [ ] **GOV-03**: First bundled voice profile is described as an original theatrical trickster voice, not as Marvel Loki, Tom Hiddleston, or any other unlicensed identity.
+- [x] **GOV-03**: First bundled voice profile is described as an original theatrical trickster voice, not as Marvel Loki, Tom Hiddleston, or any other unlicensed identity.
 - [ ] **GOV-04**: User can attach or record consent/license notes for a voice reference before that voice is used for cloning.
 
 ### Studio
 
-- [ ] **STUD-01**: User can open a no-login web studio.
-- [ ] **STUD-02**: User can select the bundled original theatrical voice profile.
+- [x] **STUD-01**: User can open a no-login web studio.
+- [x] **STUD-02**: User can select the bundled original theatrical voice profile.
 - [ ] **STUD-03**: User can enter text to synthesize into speech.
 - [ ] **STUD-04**: User can choose a tone preset for generation.
 - [ ] **STUD-05**: User can submit a generation request and see loading, success, and error states.
@@ -105,10 +105,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | GOV-01 | Phase 1 | Pending |
 | GOV-02 | Phase 1 | Pending |
-| GOV-03 | Phase 1 | Pending |
+| GOV-03 | Phase 1 | Complete |
 | GOV-04 | Phase 2 | Pending |
-| STUD-01 | Phase 1 | Pending |
-| STUD-02 | Phase 1 | Pending |
+| STUD-01 | Phase 1 | Complete |
+| STUD-02 | Phase 1 | Complete |
 | STUD-03 | Phase 2 | Pending |
 | STUD-04 | Phase 2 | Pending |
 | STUD-05 | Phase 2 | Pending |
@@ -139,6 +139,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DEP-05 | Phase 6 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 34 total
 - Mapped to phases: 34
 - Unmapped: 0
