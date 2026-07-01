@@ -115,8 +115,9 @@ Each task was committed atomically:
 1. **Task 1: Approve the dependency version lines and Phase 1 Python toolchain before scaffold install** - user checkpoint approved, no commit
 2. **Task 2: Scaffold the direct-root studio shell** - `b1d014a` (`feat`)
 3. **Task 3: Add the browser smoke test harness** - `79b2a39` (`test`)
+4. **Post-wave gate fix: Stabilize production smoke server** - `e6dc8c1` (`fix`)
 
-**Plan metadata:** pending final docs commit
+**Plan metadata:** `3413782` (`docs`)
 
 ## Files Created/Modified
 - `.gitignore` - repo hygiene for Node, Python, and Playwright artifacts
@@ -164,6 +165,14 @@ Each task was committed atomically:
 
 **Total deviations:** 2 auto-fixed (1 Rule 1, 1 Rule 3)
 **Impact on plan:** No scope creep. Both fixes were necessary to get the planned browser smoke test to pass.
+
+**3. [Post-wave gate] Stabilized the Playwright server mode**
+- **Found during:** Wave 0 post-wave verification
+- **Issue:** `next dev` rewrote `apps/web/next-env.d.ts` to a development route-types path, while `next build` rewrote it back to the production route-types path, leaving the tree dirty after verification.
+- **Fix:** Changed the Playwright web server to run `next build` followed by `next start` so smoke tests verify the production build and keep `next-env.d.ts` stable.
+- **Files modified:** `apps/web/playwright.config.ts`, `apps/web/next-env.d.ts`
+- **Verification:** `pnpm --dir apps/web build`; `pnpm --dir apps/web exec playwright test tests/root-route.spec.ts`
+- **Committed in:** `e6dc8c1` (post-wave fix commit)
 
 ## Issues Encountered
 - Playwright Chromium was not installed on the machine at first. I installed it with `pnpm --dir apps/web exec playwright install chromium` before rerunning the smoke test.
