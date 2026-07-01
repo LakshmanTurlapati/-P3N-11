@@ -17,12 +17,14 @@ affects:
 tech-stack:
   added:
     - httpx2==2.5.0
+    - uvicorn==0.49.0
     - FastAPI TestClient support for API regression tests
+    - Next.js API rewrites via `API_BASE_URL`
   patterns:
     - Pydantic v2 strict models with `extra="forbid"` for generation contracts
     - Python `Protocol` provider boundary for VAD, STT, TTS, and speech-to-speech adapters
     - Metadata-only stub responses with compact trace and timing fields
-    - Playwright route interception for the studio-to-API browser contract
+    - Playwright starts both FastAPI and Next.js so the studio-to-API browser contract uses the real metadata stub
 key-files:
   created:
     - services/api/app/schemas/generation.py
@@ -33,17 +35,19 @@ key-files:
     - services/speech-worker/providers/contracts.py
     - services/speech-worker/tests/conftest.py
     - services/speech-worker/tests/test_provider_contracts.py
+    - apps/web/next.config.ts
     - apps/web/tests/studio-generation.spec.ts
   modified:
     - services/api/app/main.py
     - pyproject.toml
     - apps/web/components/studio-shell.tsx
     - apps/web/app/globals.css
+    - apps/web/playwright.config.ts
 decisions:
   - "Keep Phase 1 generation metadata-only with no audio payload or playback surface."
   - "Route generation through the server-owned rights gate before assembling the stub result."
-  - "Mock the `/generate` browser contract in Playwright so the studio can prove the web-to-API shape without a live speech backend."
-  - "Add `httpx2` to the dev extras so `fastapi.testclient` can run under the approved Python venv."
+  - "Route `/generate` and `/voices` from Next.js to the FastAPI control plane through `API_BASE_URL` so local browser usage exercises the real metadata stub."
+  - "Add `httpx2` and `uvicorn` to the dev extras so API regression tests and local Playwright web servers run under the approved Python venv."
 metrics:
   duration: 6min
   completed: 2026-07-01
@@ -68,6 +72,7 @@ Metadata-only stub generation is now wired end to end: the API owns the rights-g
 - Added strict generation contracts for request, rights-check, metadata, provider trace, and timing data.
 - Defined provider protocols for VAD, STT, TTS, and speech-to-speech so later model swaps stay behind a narrow boundary.
 - Implemented a metadata-only stub generation service and FastAPI route that enforce the server rights gate before assembling the response.
+- Added a Next.js rewrite for `/generate` and `/voices` so the browser can reach the FastAPI control plane locally.
 - Wired StudioShell to POST the selected Vesper Glass voice id to `/generate` and render the structured metadata result card.
 - Kept the Phase 1 surface free of audio playback, mic input, tone presets, retry controls, and live conversation UI.
 - Preserved the root-route smoke test while adding the new studio-generation browser regression.
@@ -92,17 +97,19 @@ Each task was committed atomically, with TDD red/green commits for Task 3:
 - `services/speech-worker/providers/__init__.py` - provider export surface
 - `services/speech-worker/tests/conftest.py` - import bootstrap for the hyphenated worker path
 - `services/speech-worker/tests/test_provider_contracts.py` - provider contract shape coverage
+- `apps/web/next.config.ts` - API rewrite bridge to the FastAPI control plane
 - `apps/web/components/studio-shell.tsx` - generation trigger, loading state, result card
 - `apps/web/app/globals.css` - result-card and state styling
-- `apps/web/tests/studio-generation.spec.ts` - browser regression for the generation contract
-- `pyproject.toml` - added `httpx2` dev dependency for FastAPI TestClient
+- `apps/web/playwright.config.ts` - starts FastAPI and Next.js for browser verification
+- `apps/web/tests/studio-generation.spec.ts` - browser regression for the real API-backed generation contract
+- `pyproject.toml` - added `httpx2` and `uvicorn` dev dependencies
 
 ## Decisions Made
 
 - Keep Phase 1 generation metadata-only, with no audio payload or playback surface.
 - Keep rights enforcement on the server before any stub result is assembled.
-- Keep the studio browser test contract explicit by intercepting `/generate` and asserting the posted voice id plus the result-card content.
-- Add `httpx2` to the dev extras so the API regression tests remain runnable in the approved Python venv.
+- Keep the studio browser test contract explicit by letting Playwright start the API and web servers, then asserting the result-card content through the real `/generate` path.
+- Add `httpx2` and `uvicorn` to the dev extras so the API regression tests and local API server remain runnable in the approved Python venv.
 
 ## Deviations from Plan
 
@@ -115,6 +122,13 @@ Each task was committed atomically, with TDD red/green commits for Task 3:
 - **Files modified:** `pyproject.toml`
 - **Commit:** `1ac1586`
 
+**2. [Rule 3 - Blocking] Added a local API rewrite and API web server for the browser test**
+- **Found during:** Final local run verification
+- **Issue:** `StudioShell` posted to `/generate`, but the Next.js app did not proxy that route to the FastAPI control plane outside the mocked browser test.
+- **Fix:** Added `apps/web/next.config.ts` with `/generate` and `/voices` rewrites through `API_BASE_URL`, added `uvicorn==0.49.0`, and changed Playwright to start both FastAPI and Next.js.
+- **Files modified:** `apps/web/next.config.ts`, `apps/web/playwright.config.ts`, `apps/web/tests/studio-generation.spec.ts`, `pyproject.toml`
+- **Verification:** `pnpm --dir apps/web exec playwright test tests/studio-generation.spec.ts`
+
 **2. [Rule 1 - Bug] Tightened generation timing validation**
 - **Found during:** Task 2 wiring
 - **Issue:** The generation timing model needed a direct `ended_at >= started_at` check to keep the result schema honest.
@@ -124,11 +138,11 @@ Each task was committed atomically, with TDD red/green commits for Task 3:
 
 ## Issues Encountered
 
-- Running the root-route smoke and studio-generation browser tests in parallel caused a Playwright webServer build collision. Rerunning them sequentially resolved it without any app code changes.
+- Running browser tests sequentially avoids competing Next.js production builds. The Playwright config now starts FastAPI and Next.js for each browser contract test.
 
 ## User Setup Required
 
-None. The existing `.venv` plus the added `httpx2` dev dependency are enough to run the verification commands used in this plan.
+None. The existing `.venv` plus the added `httpx2` and `uvicorn` dev dependencies are enough to run the verification commands used in this plan.
 
 ## Next Phase Readiness
 
