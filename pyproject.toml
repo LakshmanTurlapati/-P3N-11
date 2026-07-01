@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "theatrical-voice-studio"
+version = "0.1.0"
+description = "Phase 1 pytest scaffold for Theatrical Voice Studio"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["services", "packages"]
+python_files = ["test_*.py", "*_test.py"]
+addopts = "-ra"
+
