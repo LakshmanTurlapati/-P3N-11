@@ -20,10 +20,10 @@ __pycache__/
 **/__pycache__/
 
 *.py[cod]
+*.egg-info/
 
 playwright-report/
 **/playwright-report/
 
 test-results/
 **/test-results/
-

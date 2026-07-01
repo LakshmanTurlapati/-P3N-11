@@ -7,10 +7,21 @@ name = "theatrical-voice-studio"
 version = "0.1.0"
 description = "Phase 1 pytest scaffold for Theatrical Voice Studio"
 requires-python = ">=3.11"
+dependencies = [
+  "fastapi==0.138.2",
+  "pydantic==2.13.4",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest==9.1.1",
+]
+
+[tool.setuptools.packages.find]
+include = ["services*"]
 
 [tool.pytest.ini_options]
 minversion = "8.0"
 testpaths = ["services", "packages"]
 python_files = ["test_*.py", "*_test.py"]
 addopts = "-ra"
-
