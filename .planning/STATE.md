@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 01
 current_phase_name: no-login-vertical-skeleton
 status: executing
-stopped_at: Completed 01-01-PLAN.md
-last_updated: "2026-07-01T00:47:37.217Z"
+stopped_at: Completed 01-02-PLAN.md
+last_updated: "2026-07-01T01:12:01.243Z"
 last_activity: 2026-07-01
 last_activity_desc: Phase 01 execution started
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-06-30)
 ## Current Position
 
 Phase: 01 (no-login-vertical-skeleton) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-07-01 — Phase 01 execution started
 
@@ -61,6 +61,8 @@ Progress: [----------] 0%
 
 *Updated after each plan completion*
 | Phase 01 P01 | 19min | 3 tasks | 15 files |
+| Phase 01 P02 | 4min | 2 tasks | 15 files |
+| Phase 01 P01-02 | 21min | 2 tasks | 17 files |
 
 ## Accumulated Context
 
@@ -78,6 +80,10 @@ Recent decisions affecting current work:
 - [Phase 01]: Use a render-only browser seed for Vesper Glass now and leave canonical rights ownership for the backend slice.
 - [Phase 01]: Use a Playwright root-route smoke test as the regression guard for the first studio surface.
 - [Phase 01]: Use python3.11 -m venv + pip as the approved Python fallback because uv is unavailable in this environment.
+- [Phase 01]: Model Vesper Glass as nested rights and style records so the server can enforce consent metadata directly.
+- [Phase 01]: Keep the blocked-generation message exact on the API gate and verify the mounted route through the FastAPI app.
+- [Phase 01]: Add a root pytest conftest to keep greenfield backend imports stable.
+- [Phase 01]: Server-owned voice registry metadata is authoritative for generation rights; browser voice data remains render-only. — Prevents direct API calls from bypassing consent and approval metadata, and keeps future generation routes behind the backend rights gate.
 
 ### Pending Todos
 
@@ -100,6 +106,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-01T00:47:37.213Z
-Stopped at: Completed 01-01-PLAN.md
+Last session: 2026-07-01T01:11:35.879Z
+Stopped at: Completed 01-02-PLAN.md
 Resume file: None
