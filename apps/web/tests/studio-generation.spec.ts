@@ -55,15 +55,15 @@ test("studio generation posts the bundled voice and renders the structured metad
   await page.goto("/");
   await page.getByRole("button", { name: "Generate stub reading" }).click();
 
-  await expect(
-    page.getByRole("heading", { name: "Generation result" }),
-  ).toBeVisible();
-  await expect(page.getByText("metadata-only-stub")).toBeVisible();
-  await expect(page.getByText("vesper-glass")).toBeVisible();
-  await expect(page.getByText("approved")).toBeVisible();
-  await expect(page.getByText("Structured studio result card")).toBeVisible();
-  await expect(page.getByText("rights-gate")).toBeVisible();
-  await expect(page.getByText("18 ms")).toBeVisible();
+  const generationCard = page.getByRole("article", { name: "Generation result" });
+
+  await expect(generationCard).toBeVisible();
+  await expect(generationCard).toContainText("metadata-only-stub");
+  await expect(generationCard).toContainText("vesper-glass");
+  await expect(generationCard).toContainText("approved");
+  await expect(generationCard).toContainText("Structured studio result card");
+  await expect(generationCard).toContainText("rights-gate");
+  await expect(generationCard).toContainText("18 ms");
 
   expect(requests).toHaveLength(1);
   expect(requests[0]).toEqual({ voice_id: "vesper-glass" });
