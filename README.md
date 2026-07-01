@@ -1,28 +1,52 @@
+<div align="center">
+
 # Op3n-11
 
 *A consent-based voice cloning and text-to-speech platform.*
 
-## What This Is
+![Status](https://img.shields.io/badge/status-planning-lightgrey?style=for-the-badge)
 
-Op3n-11 lets a user create a verified, authorized clone of their own voice and generate natural speech from text. It follows the workflow ElevenLabs popularized, but every clone requires proof of consent, not just a checkbox.
+</div>
+
+---
+
+## The Problem
+
+Voice cloning tools are spreading fast, and most treat consent as a checkbox. A user ticks a box, uploads a sample, and the clone activates. There is no proof the voice in the sample belongs to the person creating the clone, and no durable record if something goes wrong.
+
+## The Solution
+
+Op3n-11 lets a user create a verified, authorized clone of their own voice and generate natural speech from text. It follows the workflow ElevenLabs popularized, but every clone requires proof of consent: the user reads a random spoken phrase aloud, and that recording is verified before the clone activates. Every consent event, clone, and generation is written to an audit trail.
 
 ## Status
 
-This project is in the planning stage. No application code has been written yet. Requirements, architecture, and an eight-phase roadmap are complete in `.planning/`, and Phase 1 (safety, legal, and data governance) is next.
+This project is in the planning stage. No application code exists yet. Requirements, architecture, and an eight-phase roadmap are complete in `.planning/`, and Phase 1 (safety, legal, and data governance) is next.
 
 ## Core Features (v1)
 
-- Sign up and manage a personal workspace
-- Record or upload a voice sample
-- Verify consent by reading a random spoken phrase aloud
-- Create a reusable voice clone after verification passes
-- Generate, preview, regenerate, and download speech from text
-- Audit trail covering every consent, clone, and generation event
-- Admin review queue to flag and disable misused clones
+| Feature | Description |
+|---|---|
+| **Workspace** | Sign up, log in, and manage a personal voice workspace. |
+| **Sample Intake** | Record or upload a voice sample for cloning. |
+| **Consent Verification** | Read a random spoken phrase aloud before a clone can activate. |
+| **Voice Cloning** | Create a reusable personal voice clone once verification passes. |
+| **Generation** | Enter text and generate speech using an authorized cloned voice. |
+| **History** | Preview, regenerate, download, and manage generated audio. |
+| **Audit Trail** | Every consent, clone, and generation event is logged. |
+| **Admin Review** | Flag and disable misused voice clones. |
 
 ## Tech Stack
 
-Next.js, React, and TypeScript on the frontend. PostgreSQL with Drizzle ORM for data. Clerk for auth. AWS S3 and KMS for encrypted storage. Trigger.dev for background jobs. A FastAPI gateway in Python wraps the voice provider (Azure Personal Voice or Cartesia) so the underlying model can be replaced later without touching the app.
+| Layer | Choices |
+|---|---|
+| Frontend | Next.js, React, TypeScript, Tailwind CSS, shadcn/ui |
+| Auth | Clerk |
+| Data | PostgreSQL, Drizzle ORM, pgvector |
+| Storage | AWS S3, KMS, CloudTrail |
+| Jobs | Trigger.dev, Upstash Redis |
+| Voice Gateway | FastAPI, Python, Azure Personal Voice or Cartesia |
+
+The voice gateway sits behind its own abstraction, so the underlying provider or model can be replaced later without touching the app.
 
 ## Safety
 
@@ -34,4 +58,8 @@ v1 covers cloning and generation only. Broader parity work such as dubbing, agen
 
 ---
 
+<div align="center">
+
 By Akhila Susarla, Lakshman Turlapati
+
+</div>
