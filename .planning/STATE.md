@@ -4,17 +4,17 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 01
 current_phase_name: no-login-vertical-skeleton
-status: executing
-stopped_at: Completed 01-02-PLAN.md
-last_updated: "2026-07-01T01:12:01.243Z"
+status: complete
+stopped_at: Completed 01-03-PLAN.md
+last_updated: "2026-07-01T01:39:14Z"
 last_activity: 2026-07-01
-last_activity_desc: Phase 01 execution started
+last_activity_desc: Phase 01 execution completed
 progress:
   total_phases: 6
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 2
-  percent: 0
+  completed_plans: 3
+  percent: 17
 ---
 
 # Project State
@@ -28,26 +28,26 @@ See: .planning/PROJECT.md (updated 2026-06-30)
 
 ## Current Position
 
-Phase: 01 (no-login-vertical-skeleton) — EXECUTING
+Phase: 01 (no-login-vertical-skeleton) — COMPLETE
 Plan: 3 of 3
-Status: Ready to execute
-Last activity: 2026-07-01 — Phase 01 execution started
+Status: Phase complete
+Last activity: 2026-07-01 — Phase 01 execution completed
 
-Progress: [----------] 0%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 0
-- Average duration: n/a
-- Total execution time: 0.0 hours
+- Total plans completed: 3
+- Average duration: 15 min
+- Total execution time: 0.8 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1. No-Login Vertical Skeleton | 0 | 3 | - |
+| 1. No-Login Vertical Skeleton | 3 | 3 | 15 min |
 | 2. Consented Studio Generation | 0 | 3 | - |
 | 3. Audio Input and Turn Detection | 0 | 3 | - |
 | 4. Live Conversation Mode | 0 | 3 | - |
@@ -56,13 +56,14 @@ Progress: [----------] 0%
 
 **Recent Trend:**
 
-- Last 5 plans: none
-- Trend: n/a
+- Last 5 plans: Phase 01 P01, Phase 01 P02, Phase 01 P03
+- Trend: phase 1 completed
 
 *Updated after each plan completion*
 | Phase 01 P01 | 19min | 3 tasks | 15 files |
 | Phase 01 P02 | 4min | 2 tasks | 15 files |
 | Phase 01 P01-02 | 21min | 2 tasks | 17 files |
+| Phase 01 P03 | 6min | 3 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -84,6 +85,10 @@ Recent decisions affecting current work:
 - [Phase 01]: Keep the blocked-generation message exact on the API gate and verify the mounted route through the FastAPI app.
 - [Phase 01]: Add a root pytest conftest to keep greenfield backend imports stable.
 - [Phase 01]: Server-owned voice registry metadata is authoritative for generation rights; browser voice data remains render-only. — Prevents direct API calls from bypassing consent and approval metadata, and keeps future generation routes behind the backend rights gate.
+- [Phase 01]: Keep Phase 1 generation metadata-only with no audio payload or playback surface.
+- [Phase 01]: Route generation through the server-owned rights gate before assembling the stub result.
+- [Phase 01]: Mock the `/generate` browser contract in Playwright so the studio can prove the web-to-API shape without a live speech backend.
+- [Phase 01]: Add `httpx2` to the dev extras so `fastapi.testclient` can run under the approved Python venv.
 
 ### Pending Todos
 
@@ -106,6 +111,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-01T01:11:35.879Z
+Last session: 2026-07-01T01:37:47.363Z
 Stopped at: Completed 01-02-PLAN.md
 Resume file: None
