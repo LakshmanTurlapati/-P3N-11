@@ -14,12 +14,14 @@ Users can speak or write an input and receive a high-quality spoken response in 
 
 ### Validated
 
-(None yet - ship to validate)
+- [x] Phase 1 validated a no-login studio route at `/` with Vesper Glass visible as an original, rights-bounded theatrical profile.
+- [x] Phase 1 validated server-owned voice rights metadata, backend approval gating, and metadata-only stub generation before any real synthesis provider is introduced.
+- [x] Phase 1 validated typed provider interfaces for VAD, STT, TTS, and speech-to-speech candidates.
 
 ### Active
 
 - [ ] Build a cloud-hosted web app MVP for internal experimentation.
-- [ ] Provide a no-login first version focused on the speech loop and generation workflow.
+- [x] Provide a no-login first version focused on the speech loop and generation workflow.
 - [ ] Support a minimal studio workflow: choose a voice, provide text or audio input, choose a tone preset, and generate speech.
 - [ ] Include live conversation mode in v1 with microphone input, voice activity detection, interruption handling, and spoken responses.
 - [ ] Use only consented or licensed reference voices for cloning.
@@ -45,6 +47,10 @@ Initial model strategy should be modular. A practical baseline is a real-time vo
 
 The voice style prompt can describe an original persona with traits such as measured theatrical delivery, polished sarcasm, charm with cold edges, philosophical cynicism, and manipulative logic. It should not instruct the model to impersonate a copyrighted character or a real actor.
 
+## Current State
+
+Phase 1 is complete as of 2026-07-01. The app has a direct no-login studio shell, a server-owned Vesper Glass rights profile, backend rights enforcement, typed speech provider interfaces, and a metadata-only generation result card. Phase 2 starts from that skeleton and adds text input, tone presets, a real generation provider, playback, retry states, and generated-audio metadata.
+
 ## Constraints
 
 - **Voice rights**: Only consented or licensed reference voices may be cloned - this avoids building around unauthorized impersonation.
@@ -68,6 +74,7 @@ The voice style prompt can describe an original persona with traits such as meas
 | Keep v1 no-login | The user selected a fast no-login demo focused on the speech loop | - Pending |
 | Use minimal studio controls in v1 | The user selected minimal studio controls for the first version | - Pending |
 | Use a modular benchmark-first model strategy | The user asked the agent to decide; modularity reduces lock-in while still enabling a working baseline | - Pending |
+| Keep Phase 1 generation metadata-only | The first vertical skeleton should prove web-to-API shape and rights gating before introducing real synthesis latency, playback, or storage | Implemented in Phase 1 |
 
 ## Evolution
 
@@ -87,4 +94,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-30 after initialization*
+*Last updated: 2026-07-01 after Phase 1 completion*

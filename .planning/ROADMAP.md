@@ -52,7 +52,7 @@ Plans:
 
 **Wave 2**
 
-- [ ] 01-03: Speech provider interfaces and stub generation path
+- [x] 01-03: Speech provider interfaces and stub generation path
 
 ### Phase 2: Consented Studio Generation
 
@@ -176,7 +176,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. No-Login Vertical Skeleton | 3/3 | Complete   | 2026-07-01 |
+| 1. No-Login Vertical Skeleton | 3/3 | Complete    | 2026-07-01 |
 | 2. Consented Studio Generation | 0/3 | Not started | - |
 | 3. Audio Input and Turn Detection | 0/3 | Not started | - |
 | 4. Live Conversation Mode | 0/3 | Not started | - |
