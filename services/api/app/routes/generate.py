@@ -20,4 +20,4 @@ def generate(request: GenerationRequest) -> GenerationResult:
         )
 
     allowed_profile = ensure_voice_allowed(profile)
-    return build_stub_generation_result(allowed_profile)
+    return build_stub_generation_result(allowed_profile, request)

@@ -12,24 +12,29 @@ from services.api.app.voice_registry.bundled_voice import VOICE_REGISTRY
 client = TestClient(app)
 
 
-def test_generate_stub_returns_structured_metadata_only() -> None:
-    response = client.post("/generate", json={"voice_id": "vesper-glass"})
+def test_generate_stub_returns_queued_prototype_job() -> None:
+    response = client.post(
+        "/generate",
+        json={
+            "voice_id": "vesper-glass",
+            "text": "Deliver one measured, theatrical line.",
+            "tone_preset": "measured",
+        },
+    )
 
     assert response.status_code == 200
 
     payload = response.json()
-    assert payload["provider_type"] == "metadata-only-stub"
+    assert payload["provider_type"] == "prototype-baseline-stub"
+    assert payload["job_id"].startswith("job-")
+    assert payload["status"] == "queued"
     assert payload["voice_id"] == "vesper-glass"
+    assert payload["text"] == "Deliver one measured, theatrical line."
+    assert payload["tone_preset"] == "measured"
     assert payload["rights_check"] == {
         "status": "approved",
         "approved_for_generation": True,
         "message": "Rights gate approved the bundled voice profile.",
-    }
-    assert payload["result_metadata"] == {
-        "status": "metadata-only",
-        "summary": "Metadata-only stub generation completed without audio playback.",
-        "artifact_label": "Structured studio result card",
-        "provider_note": "Phase 1 keeps the stub provider inline in the API control plane.",
     }
     assert payload["provider_trace"] == [
         {
@@ -38,16 +43,17 @@ def test_generate_stub_returns_structured_metadata_only() -> None:
             "detail": "Bundled Vesper Glass profile passed the approval check.",
         },
         {
-            "stage": "provider-boundary",
-            "provider": "metadata-only-stub",
-            "detail": "Speech-worker contracts stay swappable behind the metadata stub.",
+            "stage": "job-queue",
+            "provider": "api-control-plane",
+            "detail": "Queued a prototype baseline job with the submitted text and tone preset.",
         },
         {
-            "stage": "result-assembly",
-            "provider": "api-control-plane",
-            "detail": "Returned structured metadata only with no audio payload.",
+            "stage": "provider-boundary",
+            "provider": "prototype-baseline-stub",
+            "detail": "Speech-worker contracts stay swappable behind the prototype baseline stub.",
         },
     ]
+    assert "result_metadata" not in payload
     assert "audio" not in payload
     assert "playback_url" not in payload
 
@@ -81,7 +87,14 @@ def test_generate_stub_blocks_unapproved_profiles_with_exact_message() -> None:
     original_profile = VOICE_REGISTRY["vesper-glass"]
     VOICE_REGISTRY["vesper-glass"] = blocked_profile
     try:
-        response = client.post("/generate", json={"voice_id": "vesper-glass"})
+        response = client.post(
+            "/generate",
+            json={
+                "voice_id": "vesper-glass",
+                "text": "Deliver one measured, theatrical line.",
+                "tone_preset": "measured",
+            },
+        )
     finally:
         VOICE_REGISTRY["vesper-glass"] = original_profile
 
