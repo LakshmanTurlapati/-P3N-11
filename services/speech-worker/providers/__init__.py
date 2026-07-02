@@ -8,9 +8,11 @@ from .contracts import (
     VADProvider,
     TranscriptResult,
 )
+from .cosyvoice_provider import CosyVoiceTTSProvider
 
 __all__ = [
     "AudioBuffer",
+    "CosyVoiceTTSProvider",
     "SpeechArtifact",
     "SpeechSegment",
     "SpeechToSpeechProvider",
