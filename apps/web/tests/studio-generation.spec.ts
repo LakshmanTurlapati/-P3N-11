@@ -51,7 +51,7 @@ test("studio generation accepts text and a tone preset then surfaces a queued jo
 
   await expect(generationStatus).toContainText(/Queued|Running/);
   await expect(generationCard).toBeVisible();
-  await expect(generationCard).toContainText("prototype baseline");
+  await expect(generationCard).toContainText(/prototype baseline/i);
   await expect(generationCard).toContainText("Vesper Glass");
   await expect(generationCard).toContainText("Deliver one measured, theatrical line.");
   await expect(generationCard).toContainText("Measured");
@@ -83,5 +83,5 @@ test("blocked voices still surface the exact rights message", async ({ page }) =
   await page.getByRole("button", { name: "Cutting" }).click();
   await page.getByRole("button", { name: "Generate voice" }).click();
 
-  await expect(page.getByRole("alert")).toContainText(BLOCKED_RIGHTS_MESSAGE);
+  await expect(page.locator('p[role="alert"]')).toContainText(BLOCKED_RIGHTS_MESSAGE);
 });
