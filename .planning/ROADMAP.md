@@ -69,13 +69,21 @@ Plans:
   4. User sees loading, success, error, and retry states.
   5. Generated audio is stored with provider, voice, tone, and timing metadata.
 
-**Plans**: 3 plans
+**Plans**: 4 plans
 
 Plans:
+**Wave 1**
 
 - [ ] 02-01: Studio text input, tone presets, and generation UX
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 02-02: First real TTS provider adapter and audio normalization
 - [ ] 02-03: Generation job metadata, storage, playback, and retry behavior
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 02-04: Browser playback surface and session-scoped retry
 
 ### Phase 3: Audio Input and Turn Detection
 
@@ -177,7 +185,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. No-Login Vertical Skeleton | 3/3 | Complete    | 2026-07-01 |
-| 2. Consented Studio Generation | 0/3 | Not started | - |
+| 2. Consented Studio Generation | 0/4 | Not started | - |
 | 3. Audio Input and Turn Detection | 0/3 | Not started | - |
 | 4. Live Conversation Mode | 0/3 | Not started | - |
 | 5. Model Benchmark and Selection | 0/3 | Not started | - |
