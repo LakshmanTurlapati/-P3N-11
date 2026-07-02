@@ -25,8 +25,10 @@ def test_generate_stub_returns_queued_prototype_job() -> None:
     assert response.status_code == 200
 
     payload = response.json()
-    assert payload["provider_type"] == "prototype-baseline-stub"
+    assert payload["provider_type"] is None
+    assert payload["provider_name"] is None
     assert payload["job_id"].startswith("job-")
+    assert payload["retry_of_job_id"] is None
     assert payload["status"] == "queued"
     assert payload["voice_id"] == "vesper-glass"
     assert payload["text"] == "Deliver one measured, theatrical line."
@@ -45,24 +47,29 @@ def test_generate_stub_returns_queued_prototype_job() -> None:
         {
             "stage": "job-queue",
             "provider": "api-control-plane",
-            "detail": "Queued a prototype baseline job with the submitted text and tone preset.",
+            "detail": "Queued a generation job with the submitted text and tone preset.",
         },
         {
             "stage": "provider-boundary",
-            "provider": "prototype-baseline-stub",
-            "detail": "Speech-worker contracts stay swappable behind the prototype baseline stub.",
+            "provider": "job-service",
+            "detail": "Speech-worker contracts stay swappable behind the job-backed generation route.",
         },
     ]
-    assert "result_metadata" not in payload
-    assert "audio" not in payload
-    assert "playback_url" not in payload
+    assert payload["playback_url"] is None
+    assert payload["audio_duration_ms"] is None
 
     started_at = datetime.fromisoformat(payload["timing"]["started_at"].replace("Z", "+00:00"))
     ended_at = datetime.fromisoformat(payload["timing"]["ended_at"].replace("Z", "+00:00"))
     assert started_at.tzinfo is not None
     assert ended_at.tzinfo is not None
     assert ended_at >= started_at
-    assert payload["timing"]["duration_ms"] == 18
+    assert payload["timing"]["duration_ms"] == 0
+    assert payload["attempt"]["status"] == "queued"
+    assert payload["attempt"]["provider_name"] is None
+    assert payload["attempt"]["mime_type"] is None
+    assert payload["attempt"]["error_message"] is None
+    assert payload["attempt"]["audio_duration_ms"] is None
+    assert payload["attempt"]["duration_ms"] == 0
 
 
 def test_generate_stub_blocks_unapproved_profiles_with_exact_message() -> None:
