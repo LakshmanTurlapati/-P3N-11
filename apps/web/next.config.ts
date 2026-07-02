@@ -10,6 +10,10 @@ const nextConfig: NextConfig = {
         destination: `${apiBaseUrl}/generate`,
       },
       {
+        source: "/generations/:path*",
+        destination: `${apiBaseUrl}/generations/:path*`,
+      },
+      {
         source: "/voices/:path*",
         destination: `${apiBaseUrl}/voices/:path*`,
       },

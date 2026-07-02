@@ -1,10 +1,12 @@
 "use client";
 
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 
 import { voiceDisplaySeeds } from "@/lib/voice-registry";
 
 type GenerationTonePreset = "measured" | "cutting" | "grandiose";
+type GenerationJobStatus = "queued" | "running" | "succeeded" | "failed";
+type GenerationPlaybackState = "empty" | GenerationJobStatus;
 
 type GenerationTraceEntry = {
   stage: string;
@@ -12,10 +14,12 @@ type GenerationTraceEntry = {
   detail: string;
 };
 
-type GenerationResult = {
-  provider_type: string;
+type GenerationJobRecord = {
+  provider_type: string | null;
+  provider_name: string | null;
   job_id: string;
-  status: "queued" | "running" | "succeeded" | "failed";
+  retry_of_job_id: string | null;
+  status: GenerationJobStatus;
   voice_id: string;
   text: string;
   tone_preset: GenerationTonePreset;
@@ -30,6 +34,34 @@ type GenerationResult = {
     ended_at: string;
     duration_ms: number;
   };
+  attempt: {
+    status: GenerationJobStatus;
+    provider_name: string | null;
+    mime_type: string | null;
+    error_message: string | null;
+    audio_duration_ms: number | null;
+    started_at: string;
+    ended_at: string;
+    duration_ms: number;
+  };
+  playback_url: string | null;
+  audio_duration_ms: number | null;
+};
+
+type GenerationSubmission = {
+  voiceId: string;
+  text: string;
+  tonePreset: GenerationTonePreset;
+};
+
+type GenerationRequestPayload = {
+  voice_id: string;
+  text: string;
+  tone_preset: GenerationTonePreset;
+};
+
+type GenerationResponseError = {
+  detail?: string;
 };
 
 const tonePresetOptions: Array<{
@@ -54,16 +86,231 @@ const tonePresetOptions: Array<{
   },
 ];
 
-function formatJobStatus(status: GenerationResult["status"]) {
+const POLL_INTERVAL_MS = 350;
+
+function formatJobStatus(status: GenerationJobStatus) {
   return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
-function formatProviderType(providerType: string) {
-  if (providerType.includes("prototype")) {
-    return "Prototype baseline stub";
+function formatProviderLabel(record: GenerationJobRecord) {
+  return record.provider_name ?? record.provider_type ?? "Provider pending";
+}
+
+function formatToneLabel(tonePreset: GenerationTonePreset) {
+  return (
+    tonePresetOptions.find((option) => option.value === tonePreset)?.label ??
+    tonePreset
+  );
+}
+
+function formatDurationLabel(durationMs: number | null) {
+  return durationMs === null ? "Pending" : `${durationMs} ms`;
+}
+
+function formatTimingLabel(timing: GenerationJobRecord["timing"]) {
+  return `${timing.duration_ms} ms`;
+}
+
+function upsertAttempt(
+  attempts: GenerationJobRecord[],
+  updatedAttempt: GenerationJobRecord,
+) {
+  const existingIndex = attempts.findIndex(
+    (attempt) => attempt.job_id === updatedAttempt.job_id,
+  );
+
+  if (existingIndex === -1) {
+    return [updatedAttempt, ...attempts];
   }
 
-  return providerType;
+  return attempts.map((attempt) =>
+    attempt.job_id === updatedAttempt.job_id ? updatedAttempt : attempt,
+  );
+}
+
+function getLatestAttempt(attempts: GenerationJobRecord[]) {
+  return attempts[0] ?? null;
+}
+
+function getCurrentClipAttempt(attempts: GenerationJobRecord[]) {
+  return attempts.find((attempt) => attempt.status === "succeeded") ?? null;
+}
+
+function getPlaybackState(attempts: GenerationJobRecord[]): GenerationPlaybackState {
+  const latestAttempt = getLatestAttempt(attempts);
+  if (!latestAttempt) {
+    return "empty";
+  }
+
+  return latestAttempt.status;
+}
+
+function CurrentClipCard({
+  currentClip,
+  latestAttempt,
+}: {
+  currentClip: GenerationJobRecord | null;
+  latestAttempt: GenerationJobRecord | null;
+}) {
+  return (
+    <article className="current-clip-card" aria-labelledby="current-clip-title">
+      <header className="current-clip-card__header">
+        <p className="section-kicker">Current clip</p>
+        <h2 id="current-clip-title">Current clip</h2>
+        <p className="current-clip-card__lede">
+          The latest playable clip stays controlled through the browser and keeps
+          the audio URL relative.
+        </p>
+      </header>
+
+      {currentClip ? (
+        <div className="current-clip-card__body">
+          <div className="current-clip-card__player">
+            <audio
+              controls
+              aria-label="Current clip playback"
+              preload="metadata"
+              src={currentClip.playback_url ?? undefined}
+            />
+          </div>
+
+          <dl className="current-clip-card__details">
+            <div>
+              <dt>Job ID</dt>
+              <dd>{currentClip.job_id}</dd>
+            </div>
+            <div>
+              <dt>Status</dt>
+              <dd>{formatJobStatus(currentClip.status)}</dd>
+            </div>
+            <div>
+              <dt>Text</dt>
+              <dd>{currentClip.text}</dd>
+            </div>
+            <div>
+              <dt>Voice</dt>
+              <dd>{voiceDisplaySeeds[0]?.displayName ?? currentClip.voice_id}</dd>
+            </div>
+            <div>
+              <dt>Tone</dt>
+              <dd>{formatToneLabel(currentClip.tone_preset)}</dd>
+            </div>
+            <div>
+              <dt>Provider</dt>
+              <dd>{formatProviderLabel(currentClip)}</dd>
+            </div>
+            <div>
+              <dt>Audio duration</dt>
+              <dd>{formatDurationLabel(currentClip.audio_duration_ms)}</dd>
+            </div>
+            <div>
+              <dt>Timing</dt>
+              <dd>{formatTimingLabel(currentClip.timing)}</dd>
+            </div>
+            <div>
+              <dt>Rights</dt>
+              <dd>{currentClip.rights_check.message}</dd>
+            </div>
+          </dl>
+        </div>
+      ) : (
+        <div className="current-clip-card__empty">
+          <p className="current-clip-card__empty-state">No playable clip yet.</p>
+          <p className="current-clip-card__empty-note">
+            {latestAttempt
+              ? latestAttempt.status === "failed"
+                ? "The latest attempt failed. Use Recent attempts to retry it."
+                : "The latest attempt is still resolving."
+              : "Generate a line to hear the current clip here."}
+          </p>
+        </div>
+      )}
+    </article>
+  );
+}
+
+function RecentAttemptList({
+  attempts,
+  onRetryCurrentGeneration,
+}: {
+  attempts: GenerationJobRecord[];
+  onRetryCurrentGeneration: () => void;
+}) {
+  return (
+    <section className="recent-attempts" aria-labelledby="recent-attempts-title">
+      <header className="recent-attempts__header">
+        <p className="section-kicker">Recent attempts</p>
+        <h2 id="recent-attempts-title">Recent attempts</h2>
+        <p className="recent-attempts__lede">
+          Keep the current session visible. Failed attempts remain listed here so
+          retry can reuse the last submitted inputs.
+        </p>
+      </header>
+
+      <ol className="attempt-list" aria-label="Recent attempts">
+        {attempts.length === 0 ? (
+          <li className="recent-attempts__empty">No attempts yet.</li>
+        ) : (
+          attempts.map((attempt, index) => {
+            const isLatestAttempt = index === 0;
+
+            return (
+              <li key={attempt.job_id}>
+                <article
+                  className={`attempt-card attempt-card--${attempt.status}`}
+                  aria-labelledby={`attempt-${attempt.job_id}`}
+                >
+                  <header className="attempt-card__header">
+                    <p className="attempt-card__kicker">
+                      {formatJobStatus(attempt.status)}
+                    </p>
+                    <h3 id={`attempt-${attempt.job_id}`}>{attempt.job_id}</h3>
+                  </header>
+
+                  <dl className="attempt-card__details">
+                    <div>
+                      <dt>Voice</dt>
+                      <dd>{voiceDisplaySeeds[0]?.displayName ?? attempt.voice_id}</dd>
+                    </div>
+                    <div>
+                      <dt>Tone</dt>
+                      <dd>{formatToneLabel(attempt.tone_preset)}</dd>
+                    </div>
+                    <div>
+                      <dt>Text</dt>
+                      <dd>{attempt.text}</dd>
+                    </div>
+                    <div>
+                      <dt>Provider</dt>
+                      <dd>{formatProviderLabel(attempt)}</dd>
+                    </div>
+                    <div>
+                      <dt>Timing</dt>
+                      <dd>{formatTimingLabel(attempt.timing)}</dd>
+                    </div>
+                    <div>
+                      <dt>Audio duration</dt>
+                      <dd>{formatDurationLabel(attempt.audio_duration_ms)}</dd>
+                    </div>
+                  </dl>
+
+                  {attempt.status === "failed" && isLatestAttempt ? (
+                    <button
+                      type="button"
+                      className="studio-action studio-action--secondary"
+                      onClick={onRetryCurrentGeneration}
+                    >
+                      Retry current generation
+                    </button>
+                  ) : null}
+                </article>
+              </li>
+            );
+          })
+        )}
+      </ol>
+    </section>
+  );
 }
 
 export function StudioShell() {
@@ -73,31 +320,36 @@ export function StudioShell() {
   const [generationText, setGenerationText] = useState("");
   const [selectedTonePreset, setSelectedTonePreset] =
     useState<GenerationTonePreset>("measured");
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [attempts, setAttempts] = useState<GenerationJobRecord[]>([]);
   const [generationError, setGenerationError] = useState<string | null>(null);
-  const [generationResult, setGenerationResult] = useState<GenerationResult | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeJobId, setActiveJobId] = useState<string | null>(null);
+  const [lastSubmission, setLastSubmission] = useState<GenerationSubmission | null>(
+    null,
+  );
+  const pollTimerRef = useRef<number | null>(null);
 
   const selectedVoice =
     voiceDisplaySeeds.find((voice) => voice.id === selectedVoiceId) ??
     voiceDisplaySeeds[0];
+  const latestAttempt = getLatestAttempt(attempts);
+  const currentClip = getCurrentClipAttempt(attempts);
+  const playbackState = getPlaybackState(attempts);
 
-  const generationStatusText = generationResult
-    ? formatJobStatus(generationResult.status)
-    : isGenerating
-      ? "Generating..."
-      : "Ready to generate";
+  const generationStatusText = isSubmitting
+    ? "Generating..."
+    : playbackState === "queued"
+      ? "Queued"
+      : playbackState === "running"
+        ? "Running"
+        : playbackState === "failed"
+          ? "Failed"
+          : playbackState === "succeeded"
+            ? "Succeeded"
+            : "Ready to generate";
 
-  async function handleGenerate(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    const trimmedText = generationText.trim();
-    if (!trimmedText) {
-      setGenerationError("Generation text is required.");
-      setGenerationResult(null);
-      return;
-    }
-
-    setIsGenerating(true);
+  async function submitGeneration(submission: GenerationSubmission) {
+    setIsSubmitting(true);
     setGenerationError(null);
 
     try {
@@ -107,34 +359,132 @@ export function StudioShell() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          voice_id: selectedVoiceId,
-          text: trimmedText,
-          tone_preset: selectedTonePreset,
-        }),
+          voice_id: submission.voiceId,
+          text: submission.text,
+          tone_preset: submission.tonePreset,
+        } satisfies GenerationRequestPayload),
       });
 
-      const payload = (await response.json()) as GenerationResult & {
-        detail?: string;
-      };
+      const payload = (await response.json()) as
+        | GenerationJobRecord
+        | (GenerationResponseError & Partial<GenerationJobRecord>);
+      const responseError = payload as GenerationResponseError;
 
       if (!response.ok) {
         throw new Error(
-          typeof payload.detail === "string"
-            ? payload.detail
+          typeof responseError.detail === "string"
+            ? responseError.detail
             : "Generation request failed.",
         );
       }
 
-      setGenerationResult(payload);
+      const generationRecord = payload as GenerationJobRecord;
+      setLastSubmission(submission);
+      setAttempts((currentAttempts) =>
+        upsertAttempt(currentAttempts, generationRecord),
+      );
+      setActiveJobId(generationRecord.job_id);
     } catch (error) {
-      setGenerationResult(null);
       setGenerationError(
         error instanceof Error ? error.message : "Generation request failed.",
       );
     } finally {
-      setIsGenerating(false);
+      setIsSubmitting(false);
     }
   }
+
+  async function handleGenerate(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const trimmedText = generationText.trim();
+    if (!trimmedText) {
+      setGenerationError("Generation text is required.");
+      return;
+    }
+
+    await submitGeneration({
+      voiceId: selectedVoiceId,
+      text: trimmedText,
+      tonePreset: selectedTonePreset,
+    });
+  }
+
+  async function retryCurrentGeneration() {
+    if (!lastSubmission) {
+      return;
+    }
+
+    await submitGeneration(lastSubmission);
+  }
+
+  useEffect(() => {
+    if (!activeJobId) {
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    const pollGeneration = async () => {
+      try {
+        const response = await fetch(`/generations/${activeJobId}`);
+        const payload = (await response.json()) as GenerationJobRecord & {
+          detail?: string;
+        };
+        const responseError = payload as GenerationResponseError;
+
+        if (!response.ok) {
+          throw new Error(
+            typeof responseError.detail === "string"
+              ? responseError.detail
+              : "Failed to poll generation status.",
+          );
+        }
+
+        if (cancelled) {
+          return;
+        }
+
+        setAttempts((currentAttempts) => upsertAttempt(currentAttempts, payload));
+
+        if (payload.status === "queued" || payload.status === "running") {
+          pollTimerRef.current = window.setTimeout(() => {
+            void pollGeneration();
+          }, POLL_INTERVAL_MS);
+          return;
+        }
+
+        setActiveJobId(null);
+        if (payload.status === "failed") {
+          setGenerationError(
+            payload.attempt.error_message ?? "Generation failed after job polling.",
+          );
+        } else {
+          setGenerationError(null);
+        }
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
+
+        setGenerationError(
+          error instanceof Error ? error.message : "Failed to poll generation status.",
+        );
+        setActiveJobId(null);
+      }
+    };
+
+    pollTimerRef.current = window.setTimeout(() => {
+      void pollGeneration();
+    }, POLL_INTERVAL_MS);
+
+    return () => {
+      cancelled = true;
+      if (pollTimerRef.current !== null) {
+        window.clearTimeout(pollTimerRef.current);
+        pollTimerRef.current = null;
+      }
+    };
+  }, [activeJobId]);
 
   return (
     <main className="studio-shell">
@@ -247,10 +597,10 @@ export function StudioShell() {
                 <button
                   type="submit"
                   className="studio-action"
-                  disabled={isGenerating || generationText.trim().length === 0}
-                  aria-busy={isGenerating}
+                  disabled={isSubmitting || generationText.trim().length === 0}
+                  aria-busy={isSubmitting}
                 >
-                  {isGenerating ? "Generating..." : "Generate voice"}
+                  {isSubmitting ? "Generating..." : "Generate voice"}
                 </button>
               </div>
             </form>
@@ -261,89 +611,23 @@ export function StudioShell() {
               </p>
             ) : null}
 
-            {generationResult ? (
-              <article className="generation-card" aria-labelledby="generation-job-title">
-                <header className="generation-card__header">
-                  <p className="generation-card__kicker">Prototype baseline audition</p>
-                  <h2 id="generation-job-title">Generation job</h2>
-                  <p className="generation-card__lede">
-                    The server returned a queued prototype job and kept the rights gate
-                    ahead of generation work.
-                  </p>
-                </header>
+            <CurrentClipCard currentClip={currentClip} latestAttempt={latestAttempt} />
 
-                <div className="generation-card__grid">
-                  <dl className="generation-card__details">
-                    <div>
-                      <dt>Job ID</dt>
-                      <dd>{generationResult.job_id}</dd>
-                    </div>
-                    <div>
-                      <dt>Status</dt>
-                      <dd>{formatJobStatus(generationResult.status)}</dd>
-                    </div>
-                    <div>
-                      <dt>Voice</dt>
-                      <dd>{selectedVoice.displayName}</dd>
-                    </div>
-                    <div>
-                      <dt>Text</dt>
-                      <dd>{generationResult.text}</dd>
-                    </div>
-                    <div>
-                      <dt>Tone</dt>
-                      <dd>
-                        {
-                          tonePresetOptions.find(
-                            (option) => option.value === generationResult.tone_preset,
-                          )?.label
-                        }
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Rights check</dt>
-                      <dd>
-                        {generationResult.rights_check.status}
-                        {" - "}
-                        {generationResult.rights_check.message}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Provider</dt>
-                      <dd>{formatProviderType(generationResult.provider_type)}</dd>
-                    </div>
-                    <div>
-                      <dt>Timing</dt>
-                      <dd>
-                        {generationResult.timing.started_at} -{" "}
-                        {generationResult.timing.ended_at} (
-                        {generationResult.timing.duration_ms} ms)
-                      </dd>
-                    </div>
-                  </dl>
-
-                  <section className="generation-card__trace" aria-label="Provider trace">
-                    <p className="generation-card__trace-label">Provider trace</p>
-                    <ul>
-                      {generationResult.provider_trace.map((entry) => (
-                        <li key={`${entry.stage}-${entry.provider}`}>
-                          <strong>{entry.stage}</strong>
-                          <span>{entry.provider}</span>
-                          <p>{entry.detail}</p>
-                        </li>
-                      ))}
-                    </ul>
-                  </section>
-                </div>
-              </article>
-            ) : null}
+            <RecentAttemptList
+              attempts={attempts}
+              onRetryCurrentGeneration={retryCurrentGeneration}
+            />
           </section>
 
           <aside className="mission-panel" aria-label="Studio posture">
             <p className="mission-panel__label">Studio posture</p>
             <p>
-              The first pass stays text-only, tone-locked, and rights-gated. Playback
-              and live conversation come later.
+              The first pass stays text-only, tone-locked, and rights-gated while
+              the browser keeps the current session visible.
+            </p>
+            <p>
+              Playback is controlled through the API URL, retry reuses the last
+              submitted inputs, and refresh clears session history.
             </p>
             <p>
               Prototype baseline output is acceptable here, but the voice copy must
