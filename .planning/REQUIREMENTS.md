@@ -27,9 +27,9 @@ Requirements for the initial internal no-login web app. Each maps to exactly one
 ### Speech Pipeline
 
 - [x] **PIPE-01**: System exposes provider interfaces for VAD, STT, TTS, and speech-to-speech candidates.
-- [ ] **PIPE-02**: System can synthesize speech through at least one real TTS or voice-cloning provider adapter.
+- [x] **PIPE-02**: System can synthesize speech through at least one real TTS or voice-cloning provider adapter.
 - [ ] **PIPE-03**: System stores generated audio with metadata that includes provider, voice profile, tone preset, and generation timing.
-- [ ] **PIPE-04**: System can normalize uploaded, recorded, or generated audio into formats accepted by the selected providers.
+- [x] **PIPE-04**: System can normalize uploaded, recorded, or generated audio into formats accepted by the selected providers.
 
 ### Audio Input
 
@@ -115,9 +115,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | STUD-06 | Phase 2 | Pending |
 | STUD-07 | Phase 2 | Pending |
 | PIPE-01 | Phase 1 | Complete |
-| PIPE-02 | Phase 2 | Pending |
+| PIPE-02 | Phase 2 | Complete |
 | PIPE-03 | Phase 2 | Pending |
-| PIPE-04 | Phase 2 | Pending |
+| PIPE-04 | Phase 2 | Complete |
 | AUD-01 | Phase 3 | Pending |
 | AUD-02 | Phase 3 | Pending |
 | AUD-03 | Phase 3 | Pending |

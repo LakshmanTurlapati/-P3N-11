@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 02
 current_phase_name: consented-studio-generation
 status: executing
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-07-02T15:29:12.977Z"
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-07-02T18:24:11.394Z"
 last_activity: 2026-07-02
 last_activity_desc: Phase 02 execution started
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 7
-  completed_plans: 4
+  completed_plans: 5
   percent: 17
 ---
 
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-06-30)
 ## Current Position
 
 Phase: 02 (consented-studio-generation) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-07-02 — Phase 02 execution started
 
@@ -64,6 +64,7 @@ Progress: [██░░░░░░░░] 17%
 | Phase 01 P02 | 21min | 2 tasks | 17 files |
 | Phase 01 P03 | 6min | 3 tasks | 13 files |
 | Phase 02 P01 | 1h 20m | 3 tasks | 8 files |
+| Phase 02 P02 | 20min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -93,6 +94,9 @@ Recent decisions affecting current work:
 - [Phase 02]: Return a queued prototype baseline job from the Phase 1 stub instead of the old metadata-only card.
 - [Phase 02]: Update the stale root-route smoke test so the repo matches the new Phase 2 studio surface.
 - [Phase 02]: Keep the blocked-rights browser assertion by stubbing the 403 response in the Playwright test while the API test continues to verify the real rights gate.
+- [Phase 02]: Use the official FunAudioLLM/CosyVoice repo checkout with the Fun-CosyVoice3-0.5B-2512 baseline.
+- [Phase 02]: Keep tone steering in prompt text instead of adding provider-specific knobs.
+- [Phase 02]: Normalize generated audio to mono WAV via FFmpeg before playback or storage.
 
 ### Pending Todos
 
@@ -115,6 +119,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-02T15:29:12.973Z
-Stopped at: Completed 02-01-PLAN.md
+Last session: 2026-07-02T18:24:11.390Z
+Stopped at: Completed 02-02-PLAN.md
 Resume file: None
