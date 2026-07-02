@@ -69,12 +69,18 @@ Plans:
   4. User sees loading, success, error, and retry states.
   5. Generated audio is stored with provider, voice, tone, and timing metadata.
 
-**Plans**: 4 plans
+**Plans**: 1/4 plans executed
 
 Plans:
+
+- [x] 02-01-PLAN.md
+- [ ] 02-02-PLAN.md
+- [ ] 02-03-PLAN.md
+- [ ] 02-04-PLAN.md
+
 **Wave 1**
 
-- [ ] 02-01: Studio text input, tone presets, and generation UX
+- [x] 02-01: Studio text input, tone presets, and generation UX
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -185,7 +191,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. No-Login Vertical Skeleton | 3/3 | Complete    | 2026-07-01 |
-| 2. Consented Studio Generation | 0/4 | Not started | - |
+| 2. Consented Studio Generation | 1/4 | In Progress|  |
 | 3. Audio Input and Turn Detection | 0/3 | Not started | - |
 | 4. Live Conversation Mode | 0/3 | Not started | - |
 | 5. Model Benchmark and Selection | 0/3 | Not started | - |

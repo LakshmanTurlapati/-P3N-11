@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 2
-current_phase_name: Consented Studio Generation
+current_phase: 02
+current_phase_name: consented-studio-generation
 status: executing
-stopped_at: Phase 2 context gathered
-last_updated: "2026-07-02T05:58:55.166Z"
-last_activity: 2026-07-01
-last_activity_desc: Phase 01 complete, transitioned to Phase 2
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-07-02T15:29:12.977Z"
+last_activity: 2026-07-02
+last_activity_desc: Phase 02 execution started
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 7
+  completed_plans: 4
   percent: 17
 ---
 
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-30)
 
 **Core value:** Users can speak or write an input and receive a high-quality spoken response in a controllable, consented character voice with low enough latency to feel conversational.
-**Current focus:** Phase 2: Consented Studio Generation
+**Current focus:** Phase 02 — consented-studio-generation
 
 ## Current Position
 
-Phase: 2 — Consented Studio Generation
-Plan: Not started
+Phase: 02 (consented-studio-generation) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-07-02 — Phase 02 planning complete — 4 plans ready
+Last activity: 2026-07-02 — Phase 02 execution started
 
 Progress: [██░░░░░░░░] 17%
 
@@ -63,6 +63,7 @@ Progress: [██░░░░░░░░] 17%
 | Phase 01 P01 | 19min | 3 tasks | 15 files |
 | Phase 01 P02 | 21min | 2 tasks | 17 files |
 | Phase 01 P03 | 6min | 3 tasks | 13 files |
+| Phase 02 P01 | 1h 20m | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -88,6 +89,10 @@ Recent decisions affecting current work:
 - [Phase 01]: Route generation through the server-owned rights gate before assembling the stub result.
 - [Phase 01]: Mock the `/generate` browser contract in Playwright so the studio can prove the web-to-API shape without a live speech backend.
 - [Phase 01]: Add `httpx2` to the dev extras so `fastapi.testclient` can run under the approved Python venv.
+- [Phase 02]: Use lowercase machine values for the three tone presets and render capitalized labels in the browser.
+- [Phase 02]: Return a queued prototype baseline job from the Phase 1 stub instead of the old metadata-only card.
+- [Phase 02]: Update the stale root-route smoke test so the repo matches the new Phase 2 studio surface.
+- [Phase 02]: Keep the blocked-rights browser assertion by stubbing the 403 response in the Playwright test while the API test continues to verify the real rights gate.
 
 ### Pending Todos
 
@@ -110,6 +115,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-01T02:51:47.815Z
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-consented-studio-generation/02-CONTEXT.md
+Last session: 2026-07-02T15:29:12.973Z
+Stopped at: Completed 02-01-PLAN.md
+Resume file: None

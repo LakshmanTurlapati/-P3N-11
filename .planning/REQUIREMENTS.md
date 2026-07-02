@@ -12,15 +12,15 @@ Requirements for the initial internal no-login web app. Each maps to exactly one
 - [x] **GOV-01**: User can only generate with a voice profile that has explicit rights metadata.
 - [x] **GOV-02**: System blocks generation requests for voice profiles that are not approved for generation.
 - [x] **GOV-03**: First bundled voice profile is described as an original theatrical trickster voice, not as Marvel Loki, Tom Hiddleston, or any other unlicensed identity.
-- [ ] **GOV-04**: User can attach or record consent/license notes for a voice reference before that voice is used for cloning.
+- [x] **GOV-04**: User can attach or record consent/license notes for a voice reference before that voice is used for cloning.
 
 ### Studio
 
 - [x] **STUD-01**: User can open a no-login web studio.
 - [x] **STUD-02**: User can select the bundled original theatrical voice profile.
-- [ ] **STUD-03**: User can enter text to synthesize into speech.
-- [ ] **STUD-04**: User can choose a tone preset for generation.
-- [ ] **STUD-05**: User can submit a generation request and see loading, success, and error states.
+- [x] **STUD-03**: User can enter text to synthesize into speech.
+- [x] **STUD-04**: User can choose a tone preset for generation.
+- [x] **STUD-05**: User can submit a generation request and see loading, success, and error states.
 - [ ] **STUD-06**: User can play the generated audio in the browser.
 - [ ] **STUD-07**: User can retry a failed generation without refreshing the app.
 
@@ -106,12 +106,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | GOV-01 | Phase 1 | Complete |
 | GOV-02 | Phase 1 | Complete |
 | GOV-03 | Phase 1 | Complete |
-| GOV-04 | Phase 2 | Pending |
+| GOV-04 | Phase 2 | Complete |
 | STUD-01 | Phase 1 | Complete |
 | STUD-02 | Phase 1 | Complete |
-| STUD-03 | Phase 2 | Pending |
-| STUD-04 | Phase 2 | Pending |
-| STUD-05 | Phase 2 | Pending |
+| STUD-03 | Phase 2 | Complete |
+| STUD-04 | Phase 2 | Complete |
+| STUD-05 | Phase 2 | Complete |
 | STUD-06 | Phase 2 | Pending |
 | STUD-07 | Phase 2 | Pending |
 | PIPE-01 | Phase 1 | Complete |
