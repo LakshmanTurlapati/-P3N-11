@@ -21,8 +21,8 @@ Requirements for the initial internal no-login web app. Each maps to exactly one
 - [x] **STUD-03**: User can enter text to synthesize into speech.
 - [x] **STUD-04**: User can choose a tone preset for generation.
 - [x] **STUD-05**: User can submit a generation request and see loading, success, and error states.
-- [ ] **STUD-06**: User can play the generated audio in the browser.
-- [ ] **STUD-07**: User can retry a failed generation without refreshing the app.
+- [x] **STUD-06**: User can play the generated audio in the browser.
+- [x] **STUD-07**: User can retry a failed generation without refreshing the app.
 
 ### Speech Pipeline
 
@@ -112,8 +112,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | STUD-03 | Phase 2 | Complete |
 | STUD-04 | Phase 2 | Complete |
 | STUD-05 | Phase 2 | Complete |
-| STUD-06 | Phase 2 | Pending |
-| STUD-07 | Phase 2 | Pending |
+| STUD-06 | Phase 2 | Complete |
+| STUD-07 | Phase 2 | Complete |
 | PIPE-01 | Phase 1 | Complete |
 | PIPE-02 | Phase 2 | Complete |
 | PIPE-03 | Phase 2 | Complete |

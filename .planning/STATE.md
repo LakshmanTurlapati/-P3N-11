@@ -3,18 +3,18 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_phase: 02
-current_phase_name: consented-studio-generation
-status: executing
-stopped_at: Completed 02-02-PLAN.md
-last_updated: "2026-07-02T18:52:23.982Z"
+status: completed
+stopped_at: Completed 02-04-PLAN.md
+last_updated: "2026-07-02T19:29:49.246Z"
 last_activity: 2026-07-02
-last_activity_desc: Phase 02 execution started
+last_activity_desc: Phase 02 complete
 progress:
   total_phases: 6
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 7
-  completed_plans: 6
-  percent: 86
+  completed_plans: 7
+  percent: 33
+current_phase_name: consented-studio-generation
 ---
 
 # Project State
@@ -28,27 +28,27 @@ See: .planning/PROJECT.md (updated 2026-06-30)
 
 ## Current Position
 
-Phase: 02 (consented-studio-generation) — EXECUTING
+Phase: 02 — COMPLETE
 Plan: 4 of 4
-Status: Ready to execute
-Last activity: 2026-07-02 — Phase 02 execution started
+Status: Phase 02 complete
+Last activity: 2026-07-02
 
-Progress: [█████████░] 86%
+Progress: [███░░░░░░░] 33%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 3
-- Average duration: 15 min
-- Total execution time: 0.8 hours
+- Total plans completed: 7
+- Average duration: 29 min
+- Total execution time: 3.4 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1. No-Login Vertical Skeleton | 3 | 3 | 15 min |
-| 2. Consented Studio Generation | 0 | 4 | - |
+| 2. Consented Studio Generation | 4 | 4 | 39 min |
 | 3. Audio Input and Turn Detection | 0 | 3 | - |
 | 4. Live Conversation Mode | 0 | 3 | - |
 | 5. Model Benchmark and Selection | 0 | 3 | - |
@@ -56,8 +56,8 @@ Progress: [█████████░] 86%
 
 **Recent Trend:**
 
-- Last 5 plans: Phase 01 P01, Phase 01 P02, Phase 01 P03
-- Trend: phase 1 completed
+- Last 5 plans: Phase 01 P03, Phase 02 P01, Phase 02 P02, Phase 02 P03, Phase 02 P04
+- Trend: phase 2 completed
 
 *Updated after each plan completion*
 | Phase 01 P01 | 19min | 3 tasks | 15 files |
@@ -66,6 +66,7 @@ Progress: [█████████░] 86%
 | Phase 02 P01 | 1h 20m | 3 tasks | 8 files |
 | Phase 02 P02 | 20min | 3 tasks | 5 files |
 | Phase 02 P03 | 23min | 2 tasks | 6 files |
+| Phase 02 P04 | 32m | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -102,6 +103,9 @@ Recent decisions affecting current work:
 - [Phase 02]: Keep playback constrained to the relative /generations/{job_id}/audio route and back it with a local filesystem object store.
 - [Phase 02]: Preserve GenerationResult as a compatibility subclass while introducing GenerationJobRecord and GenerationAttempt.
 - [Phase 02]: Update the legacy stub regression test because the required verify set still includes it after the route change.
+- [Phase 02]: Keep the current playable clip separate from recent session attempts so failures stay visible without hiding the last auditable success.
+- [Phase 02]: Store retry inputs in component state and resubmit those cached values instead of whatever happens to be in the live form fields.
+- [Phase 02]: Rewrite /generations/:path* through Next.js so the browser can poll status and load the controlled audio URL from the same origin.
 
 ### Pending Todos
 
@@ -124,6 +128,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-02T18:50:28.918Z
-Stopped at: Completed 02-02-PLAN.md
+Last session: 2026-07-02T19:26:38.602Z
+Stopped at: Completed 02-04-PLAN.md
 Resume file: None

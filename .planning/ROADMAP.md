@@ -14,7 +14,7 @@ The v1 milestone builds a no-login internal web app that proves the full voice w
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: No-Login Vertical Skeleton** - Prove the web/API/audio path and consent-safe voice registry. (completed 2026-07-01)
-- [ ] **Phase 2: Consented Studio Generation** - Generate playable speech from text with one real provider and tone presets.
+- [x] **Phase 2: Consented Studio Generation** - Generate playable speech from text with one real provider and tone presets. (completed 2026-07-02)
 - [ ] **Phase 3: Audio Input and Turn Detection** - Add mic/audio input, VAD, STT, and transcript inspection.
 - [ ] **Phase 4: Live Conversation Mode** - Combine speech input, persona response, TTS output, and interruption handling.
 - [ ] **Phase 5: Model Benchmark and Selection** - Compare VAD, TTS, and end-to-end speech candidates with repeatable metrics.
@@ -69,14 +69,14 @@ Plans:
   4. User sees loading, success, error, and retry states.
   5. Generated audio is stored with provider, voice, tone, and timing metadata.
 
-**Plans**: 3/4 plans executed
+**Plans**: 4/4 plans complete
 
 Plans:
 
 - [x] 02-01-PLAN.md
 - [x] 02-02-PLAN.md
 - [x] 02-03-PLAN.md
-- [ ] 02-04-PLAN.md
+- [x] 02-04-PLAN.md
 
 **Wave 1**
 
@@ -85,7 +85,7 @@ Plans:
 **Wave 2** *(blocked on Wave 1 completion)*
 
 - [x] 02-02: First real TTS provider adapter and audio normalization
-- [ ] 02-03: Generation job metadata, storage, playback, and retry behavior
+- [x] 02-03: Generation job metadata, storage, playback, and retry behavior
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -191,7 +191,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. No-Login Vertical Skeleton | 3/3 | Complete    | 2026-07-01 |
-| 2. Consented Studio Generation | 3/4 | In Progress|  |
+| 2. Consented Studio Generation | 4/4 | Complete   | 2026-07-02 |
 | 3. Audio Input and Turn Detection | 0/3 | Not started | - |
 | 4. Live Conversation Mode | 0/3 | Not started | - |
 | 5. Model Benchmark and Selection | 0/3 | Not started | - |
