@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-06-30)
 Phase: 2 — Consented Studio Generation
 Plan: Not started
 Status: Ready to execute
-Last activity: 2026-07-01 — Phase 01 complete, transitioned to Phase 2
+Last activity: 2026-07-02 — Phase 02 planning complete — 4 plans ready
 
 Progress: [██░░░░░░░░] 17%
 
@@ -48,7 +48,7 @@ Progress: [██░░░░░░░░] 17%
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1. No-Login Vertical Skeleton | 3 | 3 | 15 min |
-| 2. Consented Studio Generation | 0 | 3 | - |
+| 2. Consented Studio Generation | 0 | 4 | - |
 | 3. Audio Input and Turn Detection | 0 | 3 | - |
 | 4. Live Conversation Mode | 0 | 3 | - |
 | 5. Model Benchmark and Selection | 0 | 3 | - |
