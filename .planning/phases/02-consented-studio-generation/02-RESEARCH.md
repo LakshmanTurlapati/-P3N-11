@@ -319,27 +319,15 @@ async def read_audio(job_id: str):
 
 **If this table is empty:** All claims in this research were verified or cited - no user confirmation needed.
 
-## Open Questions
+## Resolved Defaults
 
-1. **Which CosyVoice checkpoint should Phase 2 default to?**
-   - What we know: the repo recommends `Fun-CosyVoice3-0.5B-2512` for better performance, and the current repo docs also show 300M and 0.5B-era model paths. [CITED: https://github.com/FunAudioLLM/CosyVoice]
-   - What's unclear: whether the smaller 300M path is enough for the first playable loop or whether the 0.5B path is worth the extra setup.
-   - Recommendation: start planning around the 0.5B line and keep 300M as a fallback baseline.
+1. **CosyVoice checkpoint default, resolved:** Phase 2 will plan around `Fun-CosyVoice3-0.5B-2512` / CosyVoice 0.5B as the default baseline, with 300M as the approved fallback when the human checkpoint rejects 0.5B or runtime constraints require it. [CITED: https://github.com/FunAudioLLM/CosyVoice]
 
-2. **Does the chosen model artifact carry the same license terms as the repo?**
-   - What we know: the official CosyVoice repo is Apache-2.0, and the repo/issue trail says the code and models are intended to be Apache-2.0. [CITED: https://github.com/FunAudioLLM/CosyVoice] [CITED: https://github.com/FunAudioLLM/CosyVoice/issues/853]
-   - What's unclear: the exact download artifact terms for the specific checkpoint that Phase 2 will use.
-   - Recommendation: human-verify the checkpoint before install or cloud deployment.
+2. **Checkpoint license terms, resolved:** The repo remains Apache-2.0 in the research baseline, but `02-02` must keep the blocking human checkpoint that verifies the exact checkpoint artifact terms before any install or download work. This is now a gated execution requirement, not an open planning question. [CITED: https://github.com/FunAudioLLM/CosyVoice] [CITED: https://github.com/FunAudioLLM/CosyVoice/issues/853]
 
-3. **Should generation run through a lightweight background-task seam or a durable queue in Phase 2?**
-   - What we know: FastAPI supports background tasks after a response, while the architecture docs warn that long jobs are safer behind a queue. [CITED: https://fastapi.tiangolo.com/tutorial/background-tasks/] [CITED: /Users/akhilasusarla/conductor/workspaces/p3n-11/calgary/.planning/research/ARCHITECTURE.md]
-   - What's unclear: whether the first provider run will be fast enough to stay inside a lightweight seam.
-   - Recommendation: keep the job API and worker seam separate; choose the smallest execution mechanism that still preserves job ids, status transitions, and retry.
+3. **Generation job seam, resolved:** Phase 2 will use the smallest lightweight job execution mechanism that preserves job ids, queued/running/succeeded/failed status, retry, and metadata; a durable queue stays deferred until provider latency or deployment pressure proves it is needed. [CITED: https://fastapi.tiangolo.com/tutorial/background-tasks/] [CITED: /Users/akhilasusarla/conductor/workspaces/p3n-11/calgary/.planning/research/ARCHITECTURE.md]
 
-4. **Should the README be updated in this phase or deferred to a docs-only follow-up?**
-   - What we know: the README still describes a different stack than the planning artifacts and current code. [CITED: /Users/akhilasusarla/conductor/workspaces/p3n-11/calgary/README.md]
-   - What's unclear: whether the team wants the docs cleanup bundled with Phase 2 planning or kept separate.
-   - Recommendation: treat it as a documentation follow-up, not a scope blocker.
+4. **README drift, resolved:** README drift is a docs-only follow-up outside Phase 2 execution scope. [CITED: /Users/akhilasusarla/conductor/workspaces/p3n-11/calgary/README.md]
 
 ## Environment Availability
 
