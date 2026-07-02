@@ -8,7 +8,6 @@ from .contracts import (
     VADProvider,
     TranscriptResult,
 )
-from .cosyvoice_provider import CosyVoiceTTSProvider
 
 __all__ = [
     "AudioBuffer",
@@ -21,3 +20,11 @@ __all__ = [
     "VADProvider",
     "TranscriptResult",
 ]
+
+
+def __getattr__(name: str):
+    if name == "CosyVoiceTTSProvider":
+        from .cosyvoice_provider import CosyVoiceTTSProvider
+
+        return CosyVoiceTTSProvider
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
