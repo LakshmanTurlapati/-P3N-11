@@ -6,15 +6,15 @@ current_phase: 02
 current_phase_name: consented-studio-generation
 status: executing
 stopped_at: Completed 02-02-PLAN.md
-last_updated: "2026-07-02T18:24:11.394Z"
+last_updated: "2026-07-02T18:52:23.982Z"
 last_activity: 2026-07-02
 last_activity_desc: Phase 02 execution started
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 7
-  completed_plans: 5
-  percent: 17
+  completed_plans: 6
+  percent: 86
 ---
 
 # Project State
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-06-30)
 ## Current Position
 
 Phase: 02 (consented-studio-generation) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-07-02 — Phase 02 execution started
 
-Progress: [██░░░░░░░░] 17%
+Progress: [█████████░] 86%
 
 ## Performance Metrics
 
@@ -65,6 +65,7 @@ Progress: [██░░░░░░░░] 17%
 | Phase 01 P03 | 6min | 3 tasks | 13 files |
 | Phase 02 P01 | 1h 20m | 3 tasks | 8 files |
 | Phase 02 P02 | 20min | 3 tasks | 5 files |
+| Phase 02 P03 | 23min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -97,6 +98,10 @@ Recent decisions affecting current work:
 - [Phase 02]: Use the official FunAudioLLM/CosyVoice repo checkout with the Fun-CosyVoice3-0.5B-2512 baseline.
 - [Phase 02]: Keep tone steering in prompt text instead of adding provider-specific knobs.
 - [Phase 02]: Normalize generated audio to mono WAV via FFmpeg before playback or storage.
+- [Phase 02]: Persist each generation as one job row with a single current attempt and create a new row for every retry.
+- [Phase 02]: Keep playback constrained to the relative /generations/{job_id}/audio route and back it with a local filesystem object store.
+- [Phase 02]: Preserve GenerationResult as a compatibility subclass while introducing GenerationJobRecord and GenerationAttempt.
+- [Phase 02]: Update the legacy stub regression test because the required verify set still includes it after the route change.
 
 ### Pending Todos
 
@@ -119,6 +124,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-02T18:24:11.390Z
+Last session: 2026-07-02T18:50:28.918Z
 Stopped at: Completed 02-02-PLAN.md
 Resume file: None
