@@ -272,3 +272,26 @@ test("retry reuses the live cached inputs after a failed attempt", async ({ page
   await expect(recentAttempts).toContainText("Succeeded");
   await expect(recentAttempts).not.toContainText(MUTATED_RETRY_TEXT);
 });
+
+test("blocked voices still surface the exact rights message", async ({ page }) => {
+  await page.route("**/generate", async (route) => {
+    if (route.request().method() !== "POST") {
+      await route.continue();
+      return;
+    }
+
+    await route.fulfill({
+      status: 403,
+      contentType: "application/json",
+      body: JSON.stringify({ detail: BLOCKED_RIGHTS_MESSAGE }),
+    });
+  });
+
+  await page.goto("/");
+
+  await page.getByRole("textbox", { name: "Generation text" }).fill("Blocked test line.");
+  await page.getByRole("button", { name: "Cutting" }).click();
+  await page.getByRole("button", { name: "Generate voice" }).click();
+
+  await expect(page.locator('p[role="alert"]')).toContainText(BLOCKED_RIGHTS_MESSAGE);
+});
