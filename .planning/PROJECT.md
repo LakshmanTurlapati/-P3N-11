@@ -17,6 +17,7 @@ Users can speak or write an input and receive a high-quality spoken response in 
 - [x] Phase 1 validated a no-login studio route at `/` with Vesper Glass visible as an original, rights-bounded theatrical profile.
 - [x] Phase 1 validated server-owned voice rights metadata, backend approval gating, and metadata-only stub generation before any real synthesis provider is introduced.
 - [x] Phase 1 validated typed provider interfaces for VAD, STT, TTS, and speech-to-speech candidates.
+- [x] Phase 2 validated text input, fixed tone presets, queued real-provider generation, controlled audio playback, failure/retry states, and generated-audio metadata.
 
 ### Active
 
@@ -49,7 +50,7 @@ The voice style prompt can describe an original persona with traits such as meas
 
 ## Current State
 
-Phase 1 is complete as of 2026-07-01. The app has a direct no-login studio shell, a server-owned Vesper Glass rights profile, backend rights enforcement, typed speech provider interfaces, and a metadata-only generation result card. Phase 2 starts from that skeleton and adds text input, tone presets, a real generation provider, playback, retry states, and generated-audio metadata.
+Phase 2 is complete as of 2026-07-03. The app has a direct no-login studio shell, server-owned Vesper Glass rights metadata, backend rights enforcement, text input, fixed tone presets, a queued CosyVoice-backed generation runtime, controlled browser playback, session-scoped retry states, and generated-audio metadata. Phase 3 starts from that working text-to-speech loop and adds microphone capture, VAD, STT, and transcript inspection.
 
 ## Constraints
 
@@ -75,6 +76,8 @@ Phase 1 is complete as of 2026-07-01. The app has a direct no-login studio shell
 | Use minimal studio controls in v1 | The user selected minimal studio controls for the first version | - Pending |
 | Use a modular benchmark-first model strategy | The user asked the agent to decide; modularity reduces lock-in while still enabling a working baseline | - Pending |
 | Keep Phase 1 generation metadata-only | The first vertical skeleton should prove web-to-API shape and rights gating before introducing real synthesis latency, playback, or storage | Implemented in Phase 1 |
+| Keep Phase 2 generation queued-first | The browser should receive immediate job state while provider synthesis runs through the backend runtime and records success or failure | Implemented in Phase 2 |
+| Verify browser playback against live generation routes | Route mocks hid the real-provider gap; live Playwright coverage now proves `/generate`, status polling, and controlled audio playback together | Implemented in Phase 2 |
 
 ## Evolution
 
@@ -94,4 +97,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-01 after Phase 1 completion*
+*Last updated: 2026-07-03 after Phase 2 completion*
