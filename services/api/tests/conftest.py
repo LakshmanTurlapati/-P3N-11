@@ -55,3 +55,13 @@ def client(generation_job_service, monkeypatch: pytest.MonkeyPatch) -> TestClien
         raising=False,
     )
     return TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def disable_background_generation(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        generate_route,
+        "process_generation_job",
+        lambda *args, **kwargs: None,
+        raising=False,
+    )
