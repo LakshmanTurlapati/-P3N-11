@@ -188,3 +188,87 @@ test("studio generation surfaces a playable clip through the live backend", asyn
   await expect(recentAttempts).toContainText("Succeeded");
   await expect(recentAttempts).not.toContainText("Prototype baseline stub");
 });
+
+test("retry reuses the live cached inputs after a failed attempt", async ({ page }) => {
+  await page.goto("/");
+
+  const currentClip = page.getByRole("article", { name: "Current clip" });
+  const recentAttempts = page.getByRole("list", { name: "Recent attempts" });
+  const generationStatus = page.getByRole("status", { name: "Generation status" });
+
+  await page.getByRole("textbox", { name: "Generation text" }).fill(CUTTING_TEXT);
+  await page.getByRole("button", { name: "Cutting" }).click();
+
+  const failedJob = await submitLiveGeneration(page, CUTTING_TEXT, "cutting");
+  const failedRecord = await waitForGenerationRecord(page, failedJob.job_id, "failed");
+
+  expect(failedRecord.attempt.error_message).toBe(
+    "playwright-fail-once marker triggered before synthesis.",
+  );
+
+  await expect(generationStatus).toContainText("Failed");
+  await expect(page.locator('p[role="alert"]')).toContainText(
+    "playwright-fail-once marker triggered before synthesis.",
+  );
+  await expect(currentClip).toContainText("No playable clip yet.");
+  await expect(recentAttempts.getByRole("listitem")).toHaveCount(1);
+  await expect(recentAttempts).toContainText(failedJob.job_id);
+  await expect(recentAttempts).toContainText("Failed");
+  await expect(recentAttempts).toContainText(CUTTING_TEXT);
+
+  await page
+    .getByRole("textbox", { name: "Generation text" })
+    .fill(MUTATED_RETRY_TEXT);
+  await page.getByRole("button", { name: "Grandiose" }).click();
+  await expect(page.getByRole("textbox", { name: "Generation text" })).toHaveValue(
+    MUTATED_RETRY_TEXT,
+  );
+
+  const retryResponsePromise = page.waitForResponse(
+    (response) =>
+      response.request().method() === "POST" &&
+      response.url().endsWith("/generate") &&
+      response.status() === 200,
+  );
+
+  await page.getByRole("button", { name: "Retry current generation" }).click();
+
+  const retryResponse = await retryResponsePromise;
+  const retryRequest = retryResponse.request().postDataJSON() as {
+    voice_id: string;
+    text: string;
+    tone_preset: GenerationTonePreset;
+  };
+
+  expect(retryRequest).toEqual({
+    voice_id: VOICE_ID,
+    text: CUTTING_TEXT,
+    tone_preset: "cutting",
+  });
+
+  const retriedJob = (await retryResponse.json()) as GenerationJobRecord;
+  expect(retriedJob).toMatchObject({
+    job_id: expect.any(String),
+    status: "queued",
+    voice_id: VOICE_ID,
+    text: CUTTING_TEXT,
+    tone_preset: "cutting",
+  });
+
+  const liveRetryJob = await waitForLiveGeneration(page, {
+    jobId: retriedJob.job_id,
+    text: CUTTING_TEXT,
+    tonePreset: "cutting",
+  });
+
+  await expect(generationStatus).toContainText("Succeeded");
+  await expect(currentClip).toContainText(CUTTING_TEXT);
+  await expect(currentClip).toContainText("Cutting");
+  await expect(currentClip).toContainText(liveRetryJob.job_id);
+  await expect(recentAttempts.getByRole("listitem")).toHaveCount(2);
+  await expect(recentAttempts).toContainText(failedJob.job_id);
+  await expect(recentAttempts).toContainText(retriedJob.job_id);
+  await expect(recentAttempts).toContainText("Failed");
+  await expect(recentAttempts).toContainText("Succeeded");
+  await expect(recentAttempts).not.toContainText(MUTATED_RETRY_TEXT);
+});
