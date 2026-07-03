@@ -6,15 +6,15 @@ current_phase: 02
 current_phase_name: consented-studio-generation
 status: executing
 stopped_at: Completed 02-05-PLAN.md
-last_updated: "2026-07-03T19:59:08.428Z"
+last_updated: "2026-07-03T20:58:18.401Z"
 last_activity: 2026-07-03
 last_activity_desc: Phase 02 execution started
 progress:
   total_phases: 6
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 9
-  completed_plans: 8
-  percent: 17
+  completed_plans: 9
+  percent: 33
 ---
 
 # Project State
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-06-30)
 ## Current Position
 
 Phase: 02 (consented-studio-generation) — EXECUTING
-Plan: 2 of 6
+Plan: 3 of 6
 Status: Ready to execute
 Last activity: 2026-07-03 — Phase 02 execution started
 
@@ -68,6 +68,7 @@ Progress: [███░░░░░░░] 33%
 | Phase 02 P03 | 23min | 2 tasks | 6 files |
 | Phase 02 P04 | 32m | 2 tasks | 4 files |
 | Phase 02 P05 | 30m | 2 tasks | 4 files |
+| Phase 02 P06 | 55m | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -110,6 +111,9 @@ Recent decisions affecting current work:
 - [Phase 02]: Queue generation first, then hand off to BackgroundTasks after the rights gate.
 - [Phase 02]: Load CosyVoice lazily from the approved worker root only when the default provider is needed.
 - [Phase 02]: Use a one-shot playwright-fail-once seam gated by CI/Playwright env for live retry coverage.
+- [Phase 02]: Use a local CosyVoice fixture and WAV pass-through fallback so live browser verification can run in this workspace without the external checkout or ffmpeg binary.
+- [Phase 02]: Verify retry through the cached request body, the new job id, and the visible session state instead of asserting a backend retry_of_job_id field the route does not populate.
+- [Phase 02]: Assert the controlled playback URL on the audio element src rather than waiting on browser metadata fetch timing.
 
 ### Pending Todos
 
@@ -132,6 +136,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-03T19:59:08.424Z
+Last session: 2026-07-03T20:56:57.968Z
 Stopped at: Completed 02-05-PLAN.md
 Resume file: None
