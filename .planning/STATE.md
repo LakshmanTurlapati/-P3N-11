@@ -3,17 +3,18 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_phase: 02
+current_phase_name: consented-studio-generation
 status: executing
-stopped_at: Completed 02-04-PLAN.md
-last_updated: "2026-07-03T19:39:05.497Z"
+stopped_at: Completed 02-05-PLAN.md
+last_updated: "2026-07-03T19:59:08.428Z"
 last_activity: 2026-07-03
+last_activity_desc: Phase 02 execution started
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 9
-  completed_plans: 7
+  completed_plans: 8
   percent: 17
-current_phase_name: consented-studio-generation
 ---
 
 # Project State
@@ -27,10 +28,10 @@ See: .planning/PROJECT.md (updated 2026-06-30)
 
 ## Current Position
 
-Phase: 02 — COMPLETE
-Plan: 4 of 4
+Phase: 02 (consented-studio-generation) — EXECUTING
+Plan: 2 of 6
 Status: Ready to execute
-Last activity: 2026-07-03
+Last activity: 2026-07-03 — Phase 02 execution started
 
 Progress: [███░░░░░░░] 33%
 
@@ -66,6 +67,7 @@ Progress: [███░░░░░░░] 33%
 | Phase 02 P02 | 20min | 3 tasks | 5 files |
 | Phase 02 P03 | 23min | 2 tasks | 6 files |
 | Phase 02 P04 | 32m | 2 tasks | 4 files |
+| Phase 02 P05 | 30m | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -105,6 +107,9 @@ Recent decisions affecting current work:
 - [Phase 02]: Keep the current playable clip separate from recent session attempts so failures stay visible without hiding the last auditable success.
 - [Phase 02]: Store retry inputs in component state and resubmit those cached values instead of whatever happens to be in the live form fields.
 - [Phase 02]: Rewrite /generations/:path* through Next.js so the browser can poll status and load the controlled audio URL from the same origin.
+- [Phase 02]: Queue generation first, then hand off to BackgroundTasks after the rights gate.
+- [Phase 02]: Load CosyVoice lazily from the approved worker root only when the default provider is needed.
+- [Phase 02]: Use a one-shot playwright-fail-once seam gated by CI/Playwright env for live retry coverage.
 
 ### Pending Todos
 
@@ -127,6 +132,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-02T19:26:38.602Z
-Stopped at: Completed 02-04-PLAN.md
+Last session: 2026-07-03T19:59:08.424Z
+Stopped at: Completed 02-05-PLAN.md
 Resume file: None
