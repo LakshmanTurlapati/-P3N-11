@@ -17,6 +17,18 @@ def _duration_ms_from_wav_bytes(wav_bytes: bytes) -> int | None:
         return int(round(frame_count / sample_rate_hz * 1000))
 
 
+def _is_expected_wav_format(wav_bytes: bytes, sample_rate_hz: int) -> bool:
+    try:
+        with wave.open(io.BytesIO(wav_bytes), "rb") as wav_file:
+            return (
+                wav_file.getnchannels() == 1
+                and wav_file.getsampwidth() == 2
+                and wav_file.getframerate() == sample_rate_hz
+            )
+    except (wave.Error, EOFError):
+        return False
+
+
 def normalize_audio(
     artifact: SpeechArtifact,
     *,
@@ -53,10 +65,20 @@ def normalize_audio(
             check=True,
         )
     except FileNotFoundError as exc:
-        raise RuntimeError(
-            "FFmpeg is required to normalize CosyVoice audio. "
-            "Install ffmpeg in the worker runtime before synthesis."
-        ) from exc
+        if not _is_expected_wav_format(artifact.audio_bytes, sample_rate_hz):
+            raise RuntimeError(
+                "FFmpeg is required to normalize CosyVoice audio. "
+                "Install ffmpeg in the worker runtime before synthesis."
+            ) from exc
+
+        duration_ms = _duration_ms_from_wav_bytes(artifact.audio_bytes)
+        return replace(
+            artifact,
+            audio_bytes=artifact.audio_bytes,
+            sample_rate_hz=sample_rate_hz,
+            mime_type="audio/wav",
+            duration_ms=duration_ms,
+        )
     except subprocess.CalledProcessError as exc:
         stderr = exc.stderr.decode("utf-8", errors="replace") if exc.stderr else ""
         raise RuntimeError(

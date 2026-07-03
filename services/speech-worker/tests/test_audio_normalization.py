@@ -52,3 +52,27 @@ def test_normalize_audio_invokes_ffmpeg_and_returns_playable_wav(monkeypatch) ->
     assert normalized.mime_type == "audio/wav"
     assert normalized.provider_name == "cosyvoice"
     assert normalized.duration_ms == 100
+
+
+def test_normalize_audio_falls_back_to_valid_wav_when_ffmpeg_is_missing(monkeypatch) -> None:
+    expected_wav = _wav_bytes()
+
+    def fake_run(*args, **kwargs):
+        raise FileNotFoundError("ffmpeg")
+
+    monkeypatch.setattr("audio.normalization.subprocess.run", fake_run)
+
+    artifact = SpeechArtifact(
+        audio_bytes=expected_wav,
+        sample_rate_hz=24_000,
+        mime_type="audio/wav",
+        provider_name="cosyvoice",
+    )
+
+    normalized = normalize_audio(artifact, target_sample_rate_hz=24_000)
+
+    assert normalized.audio_bytes == expected_wav
+    assert normalized.sample_rate_hz == 24_000
+    assert normalized.mime_type == "audio/wav"
+    assert normalized.provider_name == "cosyvoice"
+    assert normalized.duration_ms == 100
