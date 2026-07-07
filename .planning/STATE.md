@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 3
-current_phase_name: Audio Input and Turn Detection
+current_phase: 03
+current_phase_name: audio-input-and-turn-detection
 status: executing
-stopped_at: Phase 3 UI-SPEC approved
-last_updated: "2026-07-07T14:48:59.871Z"
-last_activity: 2026-07-03
-last_activity_desc: Phase 02 complete, transitioned to Phase 3
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-07-07T17:51:39.926Z"
+last_activity: 2026-07-07
+last_activity_desc: Phase 03 execution started
 progress:
   total_phases: 6
   completed_phases: 2
-  total_plans: 9
-  completed_plans: 9
+  total_plans: 12
+  completed_plans: 10
   percent: 33
 ---
 
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-30)
 
 **Core value:** Users can speak or write an input and receive a high-quality spoken response in a controllable, consented character voice with low enough latency to feel conversational.
-**Current focus:** Phase 3 — Audio Input and Turn Detection
+**Current focus:** Phase 03 — audio-input-and-turn-detection
 
 ## Current Position
 
-Phase: 3 — Audio Input and Turn Detection
-Plan: Not started
+Phase: 03 (audio-input-and-turn-detection) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
-Last activity: 2026-07-03 — Phase 02 complete, transitioned to Phase 3
+Last activity: 2026-07-07 — Phase 03 execution started
 
 Progress: [███░░░░░░░] 33%
 
@@ -69,6 +69,7 @@ Progress: [███░░░░░░░] 33%
 | Phase 02 P04 | 32m | 2 tasks | 4 files |
 | Phase 02 P05 | 30m | 2 tasks | 4 files |
 | Phase 02 P06 | 55m | 3 tasks | 7 files |
+| Phase 03 P01 | 19m | 3 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -114,6 +115,9 @@ Recent decisions affecting current work:
 - [Phase 02]: Use a local CosyVoice fixture and WAV pass-through fallback so live browser verification can run in this workspace without the external checkout or ffmpeg binary.
 - [Phase 02]: Verify retry through the cached request body, the new job id, and the visible session state instead of asserting a backend retry_of_job_id field the route does not populate.
 - [Phase 02]: Assert the controlled playback URL on the audio element src rather than waiting on browser metadata fetch timing.
+- [Phase 03]: Kept spoken capture on the same studio surface instead of introducing a separate audio page or mode switcher. — Keeps the capture flow beside the composer and avoids a separate navigation mode.
+- [Phase 03]: Sent capture and upload as raw audio blobs to same-origin /audio-turns routes so the browser can hand off directly to the control plane. — Lets the browser hand captured audio straight to the control plane while keeping the API boundary same-origin.
+- [Phase 03]: Modeled spoken-turn history separately from generation attempts so the session can inspect audio capture without mixing the two workflows. — Prevents spoken input history from being mixed into generation retry state or current clip playback.
 
 ### Pending Todos
 
@@ -136,6 +140,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-07T14:48:59.862Z
-Stopped at: Phase 3 UI-SPEC approved
-Resume file: .planning/phases/03-audio-input-and-turn-detection/03-UI-SPEC.md
+Last session: 2026-07-07T17:51:24.032Z
+Stopped at: Completed 03-01-PLAN.md
+Resume file: None

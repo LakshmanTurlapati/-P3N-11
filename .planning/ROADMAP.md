@@ -109,12 +109,17 @@ Plans:
   4. User can inspect the recognized transcript.
   5. The audio input path shares the same provider and job architecture as studio generation.
 
-**Plans**: 3 plans
+**Plans**: 1/3 plans executed
 
 Plans:
+
+- [x] 03-01-PLAN.md
+- [ ] 03-02-PLAN.md
+- [ ] 03-03-PLAN.md
+
 **Wave 1**
 
-- [ ] 03-01: Browser microphone and audio upload input
+- [x] 03-01: Browser microphone and audio upload input
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -202,7 +207,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 |-------|----------------|--------|-----------|
 | 1. No-Login Vertical Skeleton | 3/3 | Complete    | 2026-07-01 |
 | 2. Consented Studio Generation | 6/6 | Complete    | 2026-07-03 |
-| 3. Audio Input and Turn Detection | 0/3 | Not started | - |
+| 3. Audio Input and Turn Detection | 1/3 | In Progress|  |
 | 4. Live Conversation Mode | 0/3 | Not started | - |
 | 5. Model Benchmark and Selection | 0/3 | Not started | - |
 | 6. Cloud GPU Deployment and Internal Beta Hardening | 0/3 | Not started | - |
