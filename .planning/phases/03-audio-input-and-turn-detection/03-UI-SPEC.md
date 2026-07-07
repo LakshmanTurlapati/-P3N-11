@@ -32,7 +32,7 @@ Reuse the existing 24px card radius, translucent borders, and full-width action 
 | Rule | Contract |
 |------|----------|
 | Surface structure | Keep `/` as the studio entry point and add audio input inside the existing studio shell. Do not add a separate audio route, modal flow, or mode switcher. |
-| Desktop layout | Place the spoken-input card beside the generation composer on desktop. On mobile, stack spoken input above the composer and keep the turn list underneath both. |
+| Desktop layout | Place the spoken-input card beside the generation composer on desktop. The generation composer remains the primary visual anchor; the spoken-input card is the secondary capture surface, and the spoken-turns list is tertiary review history. On mobile, stack spoken input above the composer and keep the turn list underneath both. |
 | Capture flow | Record starts capture and Stop ends it. Stopping a recording or finishing an upload immediately creates an audio-turn job. There is no separate Transcribe button. |
 | Transcript flow | Show the transcript in an editable review field. Do not overwrite the generation composer until the user clicks `Use as generation text`. |
 | Turn visibility | Keep spoken turns session-scoped and separate from the generation attempt list. Use the existing attempt-card shape for turn cards, with transcript text plus compact VAD metadata fields: provider name, segment start and end, speech duration, and confidence when available. Failed or weak turns stay visible and prompt re-record or re-upload rather than retrying the same audio job. |
@@ -126,11 +126,11 @@ No third-party registries were declared, so no additional safety vetting is requ
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: PASS
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** approved
