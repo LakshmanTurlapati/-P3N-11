@@ -1,6 +1,12 @@
 "use client";
 
-import { type FormEvent, useEffect, useRef, useState } from "react";
+import {
+  type ChangeEvent,
+  type FormEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { voiceDisplaySeeds } from "@/lib/voice-registry";
 
@@ -64,6 +70,44 @@ type GenerationResponseError = {
   detail?: string;
 };
 
+type AudioTurnCaptureSource = "recording" | "upload";
+type AudioTurnJobStatus = "queued" | "running" | "succeeded" | "failed";
+
+type AudioTurnAttemptRecord = {
+  status: AudioTurnJobStatus;
+  provider_name: string | null;
+  mime_type: string | null;
+  error_message: string | null;
+  transcript_text: string | null;
+  vad_provider_name: string | null;
+  vad_confidence: number | null;
+  audio_duration_ms: number | null;
+  started_at: string;
+  ended_at: string;
+  duration_ms: number;
+};
+
+type AudioTurnJobRecord = {
+  provider_type: string | null;
+  provider_name: string | null;
+  job_id: string;
+  status: AudioTurnJobStatus;
+  capture_source: AudioTurnCaptureSource;
+  audio_filename: string;
+  audio_mime_type: string;
+  playback_url: string | null;
+  transcript_text: string | null;
+  vad_provider_name: string | null;
+  vad_confidence: number | null;
+  audio_duration_ms: number | null;
+  timing: {
+    started_at: string;
+    ended_at: string;
+    duration_ms: number;
+  };
+  attempt: AudioTurnAttemptRecord;
+};
+
 const tonePresetOptions: Array<{
   value: GenerationTonePreset;
   label: string;
@@ -103,6 +147,17 @@ function formatToneLabel(tonePreset: GenerationTonePreset) {
   );
 }
 
+function formatAudioTurnSourceLabel(source: AudioTurnCaptureSource) {
+  return source === "recording" ? "Recording" : "Upload";
+}
+
+function formatRecordingTimer(durationMs: number) {
+  const totalSeconds = Math.max(Math.floor(durationMs / 1000), 0);
+  const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+  const seconds = String(totalSeconds % 60).padStart(2, "0");
+  return `${minutes}:${seconds}`;
+}
+
 function formatDurationLabel(durationMs: number | null) {
   return durationMs === null ? "Pending" : `${durationMs} ms`;
 }
@@ -111,25 +166,25 @@ function formatTimingLabel(timing: GenerationJobRecord["timing"]) {
   return `${timing.duration_ms} ms`;
 }
 
-function upsertAttempt(
-  attempts: GenerationJobRecord[],
-  updatedAttempt: GenerationJobRecord,
+function upsertRecord<T extends { job_id: string }>(
+  records: T[],
+  updatedRecord: T,
 ) {
-  const existingIndex = attempts.findIndex(
-    (attempt) => attempt.job_id === updatedAttempt.job_id,
+  const existingIndex = records.findIndex(
+    (record) => record.job_id === updatedRecord.job_id,
   );
 
   if (existingIndex === -1) {
-    return [updatedAttempt, ...attempts];
+    return [updatedRecord, ...records];
   }
 
-  return attempts.map((attempt) =>
-    attempt.job_id === updatedAttempt.job_id ? updatedAttempt : attempt,
+  return records.map((record) =>
+    record.job_id === updatedRecord.job_id ? updatedRecord : record,
   );
 }
 
-function getLatestAttempt(attempts: GenerationJobRecord[]) {
-  return attempts[0] ?? null;
+function getLatestRecord<T>(records: T[]) {
+  return records[0] ?? null;
 }
 
 function getCurrentClipAttempt(attempts: GenerationJobRecord[]) {
@@ -137,7 +192,7 @@ function getCurrentClipAttempt(attempts: GenerationJobRecord[]) {
 }
 
 function getPlaybackState(attempts: GenerationJobRecord[]): GenerationPlaybackState {
-  const latestAttempt = getLatestAttempt(attempts);
+  const latestAttempt = getLatestRecord(attempts);
   if (!latestAttempt) {
     return "empty";
   }
@@ -313,6 +368,60 @@ function RecentAttemptList({
   );
 }
 
+function SpokenTurnList({ turns }: { turns: AudioTurnJobRecord[] }) {
+  return (
+    <section className="recent-attempts" aria-labelledby="spoken-turns-title">
+      <header className="recent-attempts__header">
+        <p className="section-kicker">Spoken turns</p>
+        <h2 id="spoken-turns-title">Spoken turns</h2>
+        <p className="recent-attempts__lede">
+          Keep spoken capture separate from generation attempts. Each turn stays
+          in the current session until the page refreshes.
+        </p>
+      </header>
+
+      <ol className="attempt-list" aria-label="Spoken turns">
+        {turns.length === 0 ? (
+          <li className="recent-attempts__empty">No spoken turns yet</li>
+        ) : (
+          turns.map((turn) => (
+            <li key={turn.job_id}>
+              <article
+                className={`attempt-card attempt-card--${turn.status}`}
+                aria-labelledby={`spoken-turn-${turn.job_id}`}
+              >
+                <header className="attempt-card__header">
+                  <p className="attempt-card__kicker">{formatJobStatus(turn.status)}</p>
+                  <h3 id={`spoken-turn-${turn.job_id}`}>{turn.job_id}</h3>
+                </header>
+
+                <dl className="attempt-card__details">
+                  <div>
+                    <dt>Source</dt>
+                    <dd>{formatAudioTurnSourceLabel(turn.capture_source)}</dd>
+                  </div>
+                  <div>
+                    <dt>File</dt>
+                    <dd>{turn.audio_filename}</dd>
+                  </div>
+                  <div>
+                    <dt>MIME</dt>
+                    <dd>{turn.audio_mime_type}</dd>
+                  </div>
+                  <div>
+                    <dt>Status</dt>
+                    <dd>{formatJobStatus(turn.status)}</dd>
+                  </div>
+                </dl>
+              </article>
+            </li>
+          ))
+        )}
+      </ol>
+    </section>
+  );
+}
+
 export function StudioShell() {
   const [selectedVoiceId, setSelectedVoiceId] = useState(
     voiceDisplaySeeds[0]?.id ?? "",
@@ -327,12 +436,23 @@ export function StudioShell() {
   const [lastSubmission, setLastSubmission] = useState<GenerationSubmission | null>(
     null,
   );
+  const [spokenTurns, setSpokenTurns] = useState<AudioTurnJobRecord[]>([]);
+  const [captureMessage, setCaptureMessage] = useState("Ready to record");
+  const [captureError, setCaptureError] = useState<string | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingStartedAt, setRecordingStartedAt] = useState<number | null>(null);
+  const [recordingElapsedMs, setRecordingElapsedMs] = useState(0);
+  const audioUploadInputRef = useRef<HTMLInputElement | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const recordingChunksRef = useRef<Blob[]>([]);
+  const recordingTimerRef = useRef<number | null>(null);
   const pollTimerRef = useRef<number | null>(null);
 
   const selectedVoice =
     voiceDisplaySeeds.find((voice) => voice.id === selectedVoiceId) ??
     voiceDisplaySeeds[0];
-  const latestAttempt = getLatestAttempt(attempts);
+  const latestAttempt = getLatestRecord(attempts);
   const currentClip = getCurrentClipAttempt(attempts);
   const playbackState = getPlaybackState(attempts);
 
@@ -347,6 +467,9 @@ export function StudioShell() {
           : playbackState === "succeeded"
             ? "Succeeded"
             : "Ready to generate";
+
+  const recordingStatusText = captureError ?? captureMessage;
+  const recordingTimerText = formatRecordingTimer(recordingElapsedMs);
 
   async function submitGeneration(submission: GenerationSubmission) {
     setIsSubmitting(true);
@@ -381,7 +504,7 @@ export function StudioShell() {
       const generationRecord = payload as GenerationJobRecord;
       setLastSubmission(submission);
       setAttempts((currentAttempts) =>
-        upsertAttempt(currentAttempts, generationRecord),
+        upsertRecord(currentAttempts, generationRecord),
       );
       setActiveJobId(generationRecord.job_id);
     } catch (error) {
@@ -391,6 +514,175 @@ export function StudioShell() {
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  async function submitAudioTurn(
+    audioBlob: Blob,
+    captureSource: AudioTurnCaptureSource,
+    audioFilename: string,
+  ) {
+    const mimeType = audioBlob.type || "audio/webm";
+    try {
+      const response = await fetch("/audio-turns", {
+        method: "POST",
+        headers: {
+          "Content-Type": mimeType,
+          "X-Audio-Capture-Source": captureSource,
+          "X-Audio-Filename": audioFilename,
+        },
+        body: audioBlob,
+      });
+
+      const payload = (await response.json()) as
+        | AudioTurnJobRecord
+        | { detail?: string };
+      const responseError = payload as { detail?: string };
+
+      if (!response.ok) {
+        throw new Error(
+          typeof responseError.detail === "string"
+            ? responseError.detail
+            : "Audio turn request failed.",
+        );
+      }
+
+      const audioTurnRecord = payload as AudioTurnJobRecord;
+      setSpokenTurns((currentTurns) => upsertRecord(currentTurns, audioTurnRecord));
+      setCaptureMessage("Queued");
+      setCaptureError(null);
+      return audioTurnRecord;
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Audio turn request failed.";
+      setCaptureMessage(message);
+      setCaptureError(message);
+      throw error;
+    }
+  }
+
+  async function startRecording() {
+    setCaptureError(null);
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      const message =
+        "Mic access is blocked. Allow microphone access in the browser or upload audio instead.";
+      setCaptureMessage(message);
+      setCaptureError(message);
+      return;
+    }
+
+    if (typeof MediaRecorder === "undefined") {
+      const message =
+        "Recording is not supported in this browser. Upload audio instead.";
+      setCaptureMessage(message);
+      setCaptureError(message);
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const preferredMimeType =
+        typeof MediaRecorder.isTypeSupported === "function" &&
+        MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+          ? "audio/webm;codecs=opus"
+          : "audio/webm";
+      const recorder = new MediaRecorder(stream, { mimeType: preferredMimeType });
+
+      recordingChunksRef.current = [];
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordingChunksRef.current.push(event.data);
+        }
+      };
+      recorder.onstop = () => {
+        const recordingBlob = new Blob(recordingChunksRef.current, {
+          type: recorder.mimeType || preferredMimeType,
+        });
+        recordingChunksRef.current = [];
+        mediaRecorderRef.current = null;
+        mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+        mediaStreamRef.current = null;
+        setIsRecording(false);
+        setRecordingStartedAt(null);
+        setRecordingElapsedMs(0);
+        void submitAudioTurn(
+          recordingBlob,
+          "recording",
+          "spoken-turn.webm",
+        ).catch(() => undefined);
+      };
+
+      recorder.start();
+      mediaRecorderRef.current = recorder;
+      mediaStreamRef.current = stream;
+      setIsRecording(true);
+      setRecordingStartedAt(Date.now());
+      setRecordingElapsedMs(0);
+      setCaptureMessage("Recording...");
+      setCaptureError(null);
+    } catch (error) {
+      const message =
+        error instanceof DOMException &&
+        (error.name === "NotAllowedError" || error.name === "NotFoundError")
+          ? "Mic access is blocked. Allow microphone access in the browser or upload audio instead."
+          : error instanceof Error
+            ? error.message
+            : "Mic access is blocked. Allow microphone access in the browser or upload audio instead.";
+      setCaptureMessage(message);
+      setCaptureError(message);
+      setIsRecording(false);
+      setRecordingStartedAt(null);
+      setRecordingElapsedMs(0);
+    }
+  }
+
+  function stopRecording() {
+    const recorder = mediaRecorderRef.current;
+    if (!recorder || recorder.state === "inactive") {
+      return;
+    }
+
+    recorder.stop();
+  }
+
+  function handleAudioButtonClick() {
+    if (isRecording) {
+      stopRecording();
+      return;
+    }
+
+    void startRecording();
+  }
+
+  async function handleAudioUploadChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = "";
+
+    if (!file) {
+      return;
+    }
+
+    const isSupportedAudio =
+      file.type.startsWith("audio/") ||
+      /\.(wav|webm|mp3|m4a|ogg|flac)$/i.test(file.name);
+
+    if (!isSupportedAudio) {
+      const message =
+        "That file is not supported. Upload a valid audio file and try again.";
+      setCaptureMessage(message);
+      setCaptureError(message);
+      return;
+    }
+
+    setCaptureMessage("Queued");
+    setCaptureError(null);
+    await submitAudioTurn(file, "upload", file.name || "spoken-turn.audio").catch(
+      () => undefined,
+    );
+  }
+
+  function triggerAudioUpload() {
+    audioUploadInputRef.current?.click();
   }
 
   async function handleGenerate(event: FormEvent<HTMLFormElement>) {
@@ -416,6 +708,27 @@ export function StudioShell() {
 
     await submitGeneration(lastSubmission);
   }
+
+  useEffect(() => {
+    if (!isRecording || recordingStartedAt === null) {
+      if (recordingTimerRef.current !== null) {
+        window.clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
+      return undefined;
+    }
+
+    recordingTimerRef.current = window.setInterval(() => {
+      setRecordingElapsedMs(Date.now() - recordingStartedAt);
+    }, 250);
+
+    return () => {
+      if (recordingTimerRef.current !== null) {
+        window.clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
+    };
+  }, [isRecording, recordingStartedAt]);
 
   useEffect(() => {
     if (!activeJobId) {
@@ -444,7 +757,7 @@ export function StudioShell() {
           return;
         }
 
-        setAttempts((currentAttempts) => upsertAttempt(currentAttempts, payload));
+        setAttempts((currentAttempts) => upsertRecord(currentAttempts, payload));
 
         if (payload.status === "queued" || payload.status === "running") {
           pollTimerRef.current = window.setTimeout(() => {
@@ -485,6 +798,18 @@ export function StudioShell() {
       }
     };
   }, [activeJobId]);
+
+  useEffect(
+    () => () => {
+      if (recordingTimerRef.current !== null) {
+        window.clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
+
+      mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+    },
+    [],
+  );
 
   return (
     <main className="studio-shell">
@@ -554,62 +879,148 @@ export function StudioShell() {
               </ul>
             </article>
 
-            <form className="generation-form" onSubmit={handleGenerate}>
-              <div className="field-group field-group--wide">
-                <label htmlFor="generation-text">Generation text</label>
-                <textarea
-                  id="generation-text"
-                  name="generation-text"
-                  value={generationText}
-                  onChange={(event) => setGenerationText(event.target.value)}
-                  placeholder="Write the line to audition in Vesper Glass's voice."
-                  rows={5}
-                />
-              </div>
+            <div
+              style={{
+                display: "grid",
+                gap: "1rem",
+                gridTemplateColumns: "repeat(auto-fit, minmax(20rem, 1fr))",
+                alignItems: "start",
+              }}
+            >
+              <section className="generation-form" aria-labelledby="spoken-input-title">
+                <header className="generation-card__header" style={{ marginBottom: 0 }}>
+                  <p className="section-kicker">Spoken input</p>
+                  <h2 id="spoken-input-title">Record or upload audio</h2>
+                  <p className="generation-card__lede">
+                    Record a line or upload audio beside the composer to create a
+                    queued spoken turn.
+                  </p>
+                </header>
 
-              <fieldset className="tone-selector">
-                <legend>Tone preset</legend>
-                <div className="tone-selector__chips">
-                  {tonePresetOptions.map((option) => {
-                    const isSelected = selectedTonePreset === option.value;
-
-                    return (
-                      <button
-                        key={option.value}
-                        type="button"
-                        className={`tone-chip${isSelected ? " tone-chip--selected" : ""}`}
-                        aria-pressed={isSelected}
-                        onClick={() => setSelectedTonePreset(option.value)}
-                      >
-                        <span>{option.label}</span>
-                        <small>{option.description}</small>
-                      </button>
-                    );
-                  })}
-                </div>
-              </fieldset>
-
-              <div className="generation-form__footer">
-                <div className="generation-status" role="status" aria-label="Generation status">
-                  {generationStatusText}
-                </div>
-
-                <button
-                  type="submit"
-                  className="studio-action"
-                  disabled={isSubmitting || generationText.trim().length === 0}
-                  aria-busy={isSubmitting}
+                <div
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: "0.75rem",
+                    alignItems: "center",
+                  }}
                 >
-                  {isSubmitting ? "Generating..." : "Generate voice"}
-                </button>
-              </div>
-            </form>
+                  <div className="generation-status" role="status" aria-label="Recording status">
+                    {recordingStatusText}
+                  </div>
+                  <div
+                    className="generation-status"
+                    aria-label="Recording timer"
+                    aria-live="polite"
+                    aria-atomic="true"
+                  >
+                    {recordingTimerText}
+                  </div>
+                </div>
+
+                <div className="generation-form__footer">
+                  <button
+                    type="button"
+                    className="studio-action"
+                    onClick={handleAudioButtonClick}
+                  >
+                    {isRecording ? "Stop recording" : "Record turn"}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="studio-action studio-action--secondary"
+                    onClick={triggerAudioUpload}
+                  >
+                    Upload audio
+                  </button>
+                </div>
+
+                <input
+                  ref={audioUploadInputRef}
+                  type="file"
+                  accept="audio/*"
+                  aria-label="Audio file input"
+                  onChange={handleAudioUploadChange}
+                  style={{
+                    position: "absolute",
+                    width: "1px",
+                    height: "1px",
+                    padding: 0,
+                    margin: "-1px",
+                    overflow: "hidden",
+                    clip: "rect(0, 0, 0, 0)",
+                    whiteSpace: "nowrap",
+                    border: 0,
+                  }}
+                />
+
+                {captureError ? (
+                  <p className="generation-state generation-state--error" role="alert">
+                    {captureError}
+                  </p>
+                ) : null}
+              </section>
+
+              <form className="generation-form" onSubmit={handleGenerate}>
+                <div className="field-group field-group--wide">
+                  <label htmlFor="generation-text">Generation text</label>
+                  <textarea
+                    id="generation-text"
+                    name="generation-text"
+                    value={generationText}
+                    onChange={(event) => setGenerationText(event.target.value)}
+                    placeholder="Write the line to audition in Vesper Glass's voice."
+                    rows={5}
+                  />
+                </div>
+
+                <fieldset className="tone-selector">
+                  <legend>Tone preset</legend>
+                  <div className="tone-selector__chips">
+                    {tonePresetOptions.map((option) => {
+                      const isSelected = selectedTonePreset === option.value;
+
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          className={`tone-chip${isSelected ? " tone-chip--selected" : ""}`}
+                          aria-pressed={isSelected}
+                          onClick={() => setSelectedTonePreset(option.value)}
+                        >
+                          <span>{option.label}</span>
+                          <small>{option.description}</small>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+
+                <div className="generation-form__footer">
+                  <div className="generation-status" role="status" aria-label="Generation status">
+                    {generationStatusText}
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="studio-action"
+                    disabled={isSubmitting || generationText.trim().length === 0}
+                    aria-busy={isSubmitting}
+                  >
+                    {isSubmitting ? "Generating..." : "Generate voice"}
+                  </button>
+                </div>
+              </form>
+            </div>
 
             {generationError ? (
               <p className="generation-state generation-state--error" role="alert">
                 {generationError}
               </p>
             ) : null}
+
+            <SpokenTurnList turns={spokenTurns} />
 
             <CurrentClipCard currentClip={currentClip} latestAttempt={latestAttempt} />
 
@@ -622,17 +1033,17 @@ export function StudioShell() {
           <aside className="mission-panel" aria-label="Studio posture">
             <p className="mission-panel__label">Studio posture</p>
             <p>
-              The first pass stays text-only, tone-locked, and rights-gated while
-              the browser keeps the current session visible.
+              Text generation and spoken capture now share the same no-login studio
+              surface while staying in separate session lists.
             </p>
             <p>
-              Playback is controlled through the API URL, retry reuses the last
-              submitted inputs, and refresh clears session history.
+              Playback remains controlled through same-origin API URLs, retry still
+              reuses the last submitted generation inputs, and refresh clears session
+              history.
             </p>
             <p>
-              Prototype baseline output is acceptable here, but the voice copy must
-              stay clearly original and never drift toward protected-character
-              imitation.
+              The spoken-input path stays capture-first so future VAD and STT work can
+              extend the same job seam without adding a separate page.
             </p>
           </aside>
         </div>

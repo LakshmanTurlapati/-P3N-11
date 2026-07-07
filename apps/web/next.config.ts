@@ -17,6 +17,14 @@ const nextConfig: NextConfig = {
         source: "/voices/:path*",
         destination: `${apiBaseUrl}/voices/:path*`,
       },
+      {
+        source: "/audio-turns",
+        destination: `${apiBaseUrl}/audio-turns`,
+      },
+      {
+        source: "/audio-turns/:path*",
+        destination: `${apiBaseUrl}/audio-turns/:path*`,
+      },
     ];
   },
 };
