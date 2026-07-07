@@ -112,9 +112,16 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
+**Wave 1**
 
 - [ ] 03-01: Browser microphone and audio upload input
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 03-02: VAD provider baseline and turn segmentation
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 03-03: STT provider baseline and transcript inspection
 
 ### Phase 4: Live Conversation Mode
