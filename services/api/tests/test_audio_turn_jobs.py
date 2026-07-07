@@ -23,12 +23,10 @@ def client(audio_turn_storage_root: Path) -> TestClient:
 def test_audio_turn_route_creates_a_queued_job_and_serves_controlled_audio(client) -> None:
     response = client.post(
         "/audio-turns",
-        files={
-            "audio": (
-                "spoken-turn.webm",
-                b"recorded-audio-bytes",
-                "audio/webm",
-            )
+        content=b"recorded-audio-bytes",
+        headers={
+            "Content-Type": "audio/webm",
+            "X-Audio-Filename": "spoken-turn.webm",
         },
     )
 
@@ -56,12 +54,10 @@ def test_audio_turn_route_creates_a_queued_job_and_serves_controlled_audio(clien
 def test_audio_turn_route_rejects_invalid_audio_uploads(client) -> None:
     response = client.post(
         "/audio-turns",
-        files={
-            "audio": (
-                "spoken-turn.txt",
-                b"not-audio",
-                "text/plain",
-            )
+        content=b"not-audio",
+        headers={
+            "Content-Type": "text/plain",
+            "X-Audio-Filename": "spoken-turn.txt",
         },
     )
 
