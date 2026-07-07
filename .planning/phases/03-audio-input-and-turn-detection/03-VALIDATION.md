@@ -32,7 +32,7 @@ Per-phase validation contract for feedback sampling during execution.
 
 | Requirement | Expected Behavior | Test Type | Automated Command | File Exists | Status |
 |-------------|-------------------|-----------|-------------------|-------------|--------|
-| AUD-01 | User can record microphone audio or upload an audio clip, and stop/upload creates an audio-turn job automatically. | browser/API | `pnpm --dir apps/web exec playwright test tests/audio-input.spec.ts -g "mic|upload"` and `./.venv/bin/python -m pytest services/api/tests/test_audio_turn_jobs.py -k "create" -x` | no - Wave 0 | pending |
+| AUD-01 | User can record microphone audio or upload an audio clip, stop/upload creates an audio-turn job automatically, and the recording controls expose visible labels, keyboard focus states, screen-reader-readable status text, and a live timer or level indicator. | browser/API | `pnpm --dir apps/web exec playwright test tests/audio-input.spec.ts -g "mic|upload|focus|status|recording"` and `./.venv/bin/python -m pytest services/api/tests/test_audio_turn_jobs.py -k "create" -x` | no - Wave 0 | pending |
 | AUD-02 | VAD runs through `VADProvider`, selects one lenient best speech region, and persists provider/start/end/duration/confidence metadata. | unit/integration | `./.venv/bin/python -m pytest services/api/tests/test_audio_turn_jobs.py services/speech-worker/tests/test_audio_turn_providers.py -k "vad" -x` | no - Wave 0 | pending |
 | AUD-03 | STT runs through `STTProvider`, persists transcript/provider metadata, and supports deterministic fallback fixtures. | unit/integration | `./.venv/bin/python -m pytest services/api/tests/test_audio_turn_jobs.py services/speech-worker/tests/test_audio_turn_providers.py -k "stt" -x` | no - Wave 0 | pending |
 | AUD-04 | Browser shows an editable transcript review field and only copies it into the generation composer after an explicit Use as generation text action. | browser/e2e | `pnpm --dir apps/web exec playwright test tests/audio-input.spec.ts -g "transcript|Use as generation text"` | no - Wave 0 | pending |
@@ -41,7 +41,7 @@ Per-phase validation contract for feedback sampling during execution.
 
 - [ ] `services/api/tests/test_audio_turn_jobs.py` - covers audio-turn queue/status transitions, upload validation, artifact storage, transcript payloads, and compact VAD metadata.
 - [ ] `services/speech-worker/tests/test_audio_turn_providers.py` - covers Silero-compatible VAD and faster-whisper-compatible STT adapters with deterministic fallback fixtures.
-- [ ] `apps/web/tests/audio-input.spec.ts` - covers mic/upload states, queued/running/succeeded/failed audio turns, transcript editing, and Use as generation text.
+- [ ] `apps/web/tests/audio-input.spec.ts` - covers mic/upload states, visible labels, keyboard focus states, live status text or timer/level indicator, queued/running/succeeded/failed audio turns, transcript editing, and Use as generation text.
 - [ ] `services/api/tests/conftest.py` - shared audio-turn fixtures mirroring existing generation-job fixtures if needed.
 - [ ] Framework install: none for pytest or Playwright. Human-verify and install speech runtime packages before provider integration work.
 
@@ -51,6 +51,7 @@ Per-phase validation contract for feedback sampling during execution.
 |----------|-------------|------------|-------------------|
 | `silero-vad` and `faster-whisper` package legitimacy and runtime install | AUD-02, AUD-03 | Research package gate marked both speech packages SUS, and model/runtime install can vary by host/GPU image | Before installing, review source repo and registry metadata, then run the focused provider tests with deterministic fixtures enabled. |
 | Microphone permission denial and unavailable-device state | AUD-01 | Browser/device permission prompts are environment-dependent and hard to fully assert in CI | In a browser run, deny microphone permission and confirm the studio shows the denied state without creating an audio-turn job. |
+| Keyboard focus and live status announcement | AUD-01 | Browser accessibility behavior is best checked with both automation and a manual pass | Tab through Record, Stop, and Upload and confirm focus styling plus readable status text/timer updates; if a screen reader is available, confirm the recording status is announced. |
 | Real captured browser blob normalization | AUD-01, AUD-02, AUD-03 | FFmpeg is missing in this workspace, and browser codec output varies | Record a short clip in the browser, submit it, and confirm the backend either normalizes it to mono WAV or reports a clear validation/setup error. |
 
 ## Security Domain

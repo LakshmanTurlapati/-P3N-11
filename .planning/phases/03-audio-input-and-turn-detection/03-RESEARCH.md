@@ -287,16 +287,16 @@ for segment in segments:
 
 > All claims in this research were verified or cited - no user confirmation needed.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Should Phase 3 require FFmpeg to be installed in the worker image now, or should the planner start with WAV-only fixtures and add FFmpeg in the same wave?**
+1. **Resolved: Phase 3 will include the FFmpeg setup/install step now, while tests keep a WAV-only deterministic fallback.**
    - What we know: the current worker helper normalizes non-WAV inputs with FFmpeg, and this workspace does not have an `ffmpeg` binary.
-   - What's unclear: whether the planner wants the setup step in the same phase or as an implementation prerequisite.
-   - Recommendation: plan the FFmpeg install step now; keep a WAV-only fallback for tests.
-2. **Which Silero runtime should the worker use first: `torch`/`torchaudio` or `onnxruntime`?**
+   - Decision: plan the FFmpeg install/setup step now; keep a WAV-only fallback for tests.
+2. **Resolved: the worker will use the `torch`/`torchaudio` Silero path first.**
    - What we know: the official Silero README supports both paths, and this workspace has neither installed.
-   - What's unclear: whether the phase values smaller runtime image size or simpler file-based I/O.
-   - Recommendation: choose the `torch`/`torchaudio` path first because it matches the official helper flow and the existing file-based normalization pattern.
+   - Decision: choose the `torch`/`torchaudio` path first because it matches the official helper flow and the existing file-based normalization pattern.
+
+These decisions are locked for Phase 3 planning. Future execution should treat FFmpeg setup and the `torch`/`torchaudio` Silero path as the approved baseline, with deterministic fixtures kept for local tests.
 
 ## Environment Availability
 
@@ -309,15 +309,15 @@ for segment in segments:
 | uvicorn | FastAPI server for Playwright | ✓ | 0.49.0 in `.venv` | `./.venv/bin/python -m uvicorn` |
 | Playwright | Browser verification | ✓ | 1.61.1 via `apps/web/node_modules/.bin/playwright` | `cd apps/web && pnpm test` |
 | uv | Python dependency management | ✗ | — | Use the current `.venv` + `pip` fallback already accepted by the project. |
-| FFmpeg | Audio normalization | ✗ | — | Add FFmpeg to the worker image or keep a WAV-only fallback for tests. |
-| Speech runtime packages | Silero/STT worker stack | ✗ | `silero-vad`, `faster-whisper`, `torch`, `torchaudio`, `ctranslate2` are not installed in `.venv` | Install them in the worker venv/image after human verify. |
+| FFmpeg | Audio normalization | ✗ | — | Add FFmpeg to the worker image in this phase; keep a WAV-only fallback for tests. |
+| Speech runtime packages | Silero/STT worker stack | ✗ | `silero-vad`, `faster-whisper`, `torch`, `torchaudio`, `ctranslate2` are not installed in `.venv` | Install them in the worker venv/image after human verify; use the approved `torch`/`torchaudio` Silero path and deterministic fixtures. |
 
 **Missing dependencies with no fallback:**
-- none - the phase can proceed once the planner adds the worker/runtime install step and/or the FFmpeg setup step.
+- none - the phase can proceed once the planner adds the worker/runtime install step and completes the FFmpeg setup step.
 
 **Missing dependencies with fallback:**
 - FFmpeg - a WAV-only fallback exists for tests, but it is not enough for arbitrary browser blobs.
-- Speech runtime packages - install in the worker venv/image; the official package docs already define the runtime path.
+- Speech runtime packages - install in the worker venv/image; use the approved `torch`/`torchaudio` Silero path and the deterministic fixture fallback.
 
 ## Validation Architecture
 
