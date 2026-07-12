@@ -35,8 +35,8 @@ Requirements for the initial internal no-login web app. Each maps to exactly one
 
 - [x] **AUD-01**: User can provide spoken input through the browser microphone or an uploaded audio clip.
 - [x] **AUD-02**: System can detect speech boundaries using a VAD provider.
-- [ ] **AUD-03**: System can transcribe user speech through an STT provider.
-- [ ] **AUD-04**: User can see or inspect the recognized transcript before or during speech-to-speech generation.
+- [x] **AUD-03**: System can transcribe user speech through an STT provider.
+- [x] **AUD-04**: User can see or inspect the recognized transcript before or during speech-to-speech generation.
 
 ### Conversation
 
@@ -120,8 +120,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PIPE-04 | Phase 2 | Complete |
 | AUD-01 | Phase 3 | Complete |
 | AUD-02 | Phase 3 | Complete |
-| AUD-03 | Phase 3 | Pending |
-| AUD-04 | Phase 3 | Pending |
+| AUD-03 | Phase 3 | Complete |
+| AUD-04 | Phase 3 | Complete |
 | CONV-01 | Phase 4 | Pending |
 | CONV-02 | Phase 4 | Pending |
 | CONV-03 | Phase 4 | Pending |
