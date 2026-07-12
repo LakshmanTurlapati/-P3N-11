@@ -54,6 +54,48 @@ class AudioTurnTiming(BaseModel):
         return self
 
 
+class AudioTurnVADSegment(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    start_ms: int = Field(ge=0)
+    end_ms: int = Field(ge=0)
+    confidence: float | None = Field(default=None, ge=0, le=1)
+
+    @model_validator(mode="after")
+    def _require_end_after_start(self) -> "AudioTurnVADSegment":
+        if self.end_ms < self.start_ms:
+            raise ValueError("segment end_ms must be greater than or equal to start_ms")
+        return self
+
+
+class AudioTurnVADMetadata(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    provider_name: str = Field(min_length=1)
+    segments: list[AudioTurnVADSegment] = Field(default_factory=list)
+    speech_start_ms: int = Field(ge=0)
+    speech_end_ms: int = Field(ge=0)
+    speech_duration_ms: int = Field(ge=0)
+    confidence: float | None = Field(default=None, ge=0, le=1)
+    warning_message: str | None = None
+
+    @field_validator("provider_name", "warning_message")
+    @classmethod
+    def _normalize_optional_text(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        cleaned_value = value.strip()
+        if not cleaned_value:
+            return None
+        return cleaned_value
+
+    @model_validator(mode="after")
+    def _require_valid_range(self) -> "AudioTurnVADMetadata":
+        if self.speech_end_ms < self.speech_start_ms:
+            raise ValueError("speech_end_ms must be greater than or equal to speech_start_ms")
+        return self
+
+
 class AudioTurnAttempt(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
@@ -64,6 +106,7 @@ class AudioTurnAttempt(BaseModel):
     transcript_text: str | None = None
     vad_provider_name: str | None = None
     vad_confidence: float | None = None
+    vad_metadata: AudioTurnVADMetadata | None = None
     audio_duration_ms: int | None = None
     started_at: datetime = Field(default_factory=_now)
     ended_at: datetime = Field(default_factory=_now)
@@ -100,6 +143,7 @@ class AudioTurnJobRecord(BaseModel):
     transcript_text: str | None = None
     vad_provider_name: str | None = None
     vad_confidence: float | None = None
+    vad_metadata: AudioTurnVADMetadata | None = None
     audio_duration_ms: int | None = None
     timing: AudioTurnTiming = Field(default_factory=_default_timing)
     attempt: AudioTurnAttempt = Field(default_factory=AudioTurnAttempt)
@@ -131,6 +175,16 @@ class AudioTurnJobRecord(BaseModel):
     def _validate_status_and_attempt(self) -> "AudioTurnJobRecord":
         if self.attempt.status != self.status:
             raise ValueError("attempt status must match the job status")
+
+        if self.status == AudioTurnJobStatus.SUCCEEDED:
+            if self.vad_metadata is None or self.attempt.vad_metadata is None:
+                raise ValueError("succeeded jobs must include VAD metadata")
+            if self.provider_name is None or self.attempt.provider_name is None:
+                raise ValueError("succeeded jobs must include provider metadata")
+            if self.vad_provider_name is None or self.attempt.vad_provider_name is None:
+                raise ValueError("succeeded jobs must include VAD provider metadata")
+            if self.audio_duration_ms is None or self.attempt.audio_duration_ms is None:
+                raise ValueError("succeeded jobs must include audio duration metadata")
 
         if self.status == AudioTurnJobStatus.FAILED and not self.attempt.error_message:
             raise ValueError("failed jobs must preserve the error message")

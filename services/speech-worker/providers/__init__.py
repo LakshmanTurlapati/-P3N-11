@@ -15,6 +15,7 @@ __all__ = [
     "SpeechArtifact",
     "SpeechSegment",
     "SpeechToSpeechProvider",
+    "SileroVADProvider",
     "STTProvider",
     "TTSProvider",
     "VADProvider",
@@ -27,4 +28,8 @@ def __getattr__(name: str):
         from .cosyvoice_provider import CosyVoiceTTSProvider
 
         return CosyVoiceTTSProvider
+    if name == "SileroVADProvider":
+        from .silero_vad_provider import SileroVADProvider
+
+        return SileroVADProvider
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

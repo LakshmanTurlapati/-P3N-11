@@ -3,11 +3,12 @@ from __future__ import annotations
 from functools import lru_cache
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
 from fastapi.responses import FileResponse
 
 from services.api.app.schemas.audio_turn import AudioTurnJobRecord, AudioTurnRequest
 from services.api.app.services.audio_turn_jobs import AudioTurnJobService
+from services.api.app.services.audio_turn_runtime import process_audio_turn_job
 
 router = APIRouter(tags=["audio-turns"])
 
@@ -42,7 +43,10 @@ def _content_type_from_headers(request: Request) -> str:
 
 
 @router.post("/audio-turns", response_model=AudioTurnJobRecord)
-async def create_audio_turn(request: Request) -> AudioTurnJobRecord:
+async def create_audio_turn(
+    request: Request,
+    background_tasks: BackgroundTasks,
+) -> AudioTurnJobRecord:
     audio_bytes = await request.body()
     if not audio_bytes:
         raise HTTPException(
@@ -68,7 +72,14 @@ async def create_audio_turn(request: Request) -> AudioTurnJobRecord:
         audio_filename=_filename_from_headers(request),
         audio_mime_type=content_type,
     )
-    return get_audio_turn_job_service().create_job(audio_request, audio_bytes)
+    job_service = get_audio_turn_job_service()
+    queued_job = job_service.create_job(audio_request, audio_bytes)
+    background_tasks.add_task(
+        process_audio_turn_job,
+        queued_job.job_id,
+        job_service=job_service,
+    )
+    return queued_job
 
 
 @router.get("/audio-turns/{job_id}", response_model=AudioTurnJobRecord)

@@ -107,3 +107,16 @@ def test_audio_turn_route_keeps_thin_turns_reviewable_with_a_warning(client) -> 
     assert detail["vad_metadata"]["warning_message"] is not None
     assert "thin" in detail["vad_metadata"]["warning_message"].lower()
     assert detail["vad_metadata"]["segments"]
+
+
+def test_audio_turn_route_rejects_invalid_audio_uploads(client) -> None:
+    response = client.post(
+        "/audio-turns",
+        content=b"not-audio",
+        headers={
+            "Content-Type": "text/plain",
+            "X-Audio-Filename": "spoken-turn.txt",
+        },
+    )
+
+    assert response.status_code in {400, 415, 422}
