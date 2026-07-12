@@ -101,7 +101,7 @@ Each task was committed atomically:
 2. **Task 2: Implement the faster-whisper-compatible STT provider and transcript persistence** - `ea495e0` (feat)
 3. **Task 3: Wire transcript review and explicit generation-text handoff** - `6137e41` (feat)
 
-**Plan metadata:** pending final docs commit
+**Plan metadata:** `b6aaabc` (summary/state/roadmap), `514aaac` (requirements)
 
 ## Files Created/Modified
 - `services/speech-worker/providers/faster_whisper_stt_provider.py` - Faster-whisper-compatible STT adapter with fixture fallback
@@ -151,3 +151,4 @@ The studio now has provider-backed transcription, editable transcript review, an
 
 - Confirmed the summary file and shipped code files exist on disk.
 - Confirmed task commits `ea495e0` and `6137e41` are present in git history.
+- Confirmed docs commits `b6aaabc` and `514aaac` are present in git history.
