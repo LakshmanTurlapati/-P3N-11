@@ -155,6 +155,8 @@ class AudioTurnJobService:
             provider_name=None,
             playback_url=f"/audio-turns/{job_id}/audio",
             transcript_text=None,
+            transcript_language=None,
+            transcript_confidence=None,
             vad_provider_name=None,
             vad_confidence=None,
             vad_metadata=None,
@@ -166,6 +168,8 @@ class AudioTurnJobService:
                 mime_type=request.audio_mime_type,
                 error_message=None,
                 transcript_text=None,
+                transcript_language=None,
+                transcript_confidence=None,
                 vad_provider_name=None,
                 vad_confidence=None,
                 vad_metadata=None,
@@ -200,7 +204,10 @@ class AudioTurnJobService:
         job_id: str,
         *,
         vad_metadata: AudioTurnVADMetadata,
+        provider_name: str,
         transcript_text: str | None = None,
+        transcript_language: str | None = None,
+        transcript_confidence: float | None = None,
         audio_duration_ms: int | None = None,
     ) -> AudioTurnJobRecord:
         record = self.get_job(job_id)
@@ -210,16 +217,20 @@ class AudioTurnJobService:
         now = _now()
         elapsed_ms = _milliseconds(now - record.timing.started_at)
         record.status = AudioTurnJobStatus.SUCCEEDED
-        record.provider_type = vad_metadata.provider_name
-        record.provider_name = vad_metadata.provider_name
+        record.provider_type = provider_name
+        record.provider_name = provider_name
         record.transcript_text = transcript_text
+        record.transcript_language = transcript_language
+        record.transcript_confidence = transcript_confidence
         record.vad_provider_name = vad_metadata.provider_name
         record.vad_confidence = vad_metadata.confidence
         record.vad_metadata = vad_metadata
         record.audio_duration_ms = audio_duration_ms
         record.attempt.status = AudioTurnJobStatus.SUCCEEDED
-        record.attempt.provider_name = vad_metadata.provider_name
+        record.attempt.provider_name = provider_name
         record.attempt.transcript_text = transcript_text
+        record.attempt.transcript_language = transcript_language
+        record.attempt.transcript_confidence = transcript_confidence
         record.attempt.vad_provider_name = vad_metadata.provider_name
         record.attempt.vad_confidence = vad_metadata.confidence
         record.attempt.vad_metadata = vad_metadata

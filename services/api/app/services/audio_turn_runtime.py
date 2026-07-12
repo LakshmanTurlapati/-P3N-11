@@ -53,23 +53,34 @@ def _ensure_worker_root_on_path() -> Path:
 
 
 @lru_cache(maxsize=1)
-def _load_worker_dependencies() -> tuple[Any, Any, Any, Any]:
+def _load_worker_dependencies() -> tuple[Any, Any, Any, Any, Any]:
     _ensure_worker_root_on_path()
     try:
         from audio.normalization import normalize_audio
-        from providers import AudioBuffer, SileroVADProvider, SpeechArtifact
+        from providers import (
+            AudioBuffer,
+            FasterWhisperSTTProvider,
+            SileroVADProvider,
+            SpeechArtifact,
+        )
     except ImportError as exc:  # pragma: no cover - only when the approved worker root is missing
         raise RuntimeError(
             "Approved speech-worker dependencies could not be imported."
         ) from exc
 
-    return normalize_audio, AudioBuffer, SpeechArtifact, SileroVADProvider
+    return normalize_audio, AudioBuffer, SpeechArtifact, SileroVADProvider, FasterWhisperSTTProvider
 
 
 @lru_cache(maxsize=1)
 def get_audio_turn_vad_provider() -> Any:
-    _, _, _, vad_provider_class = _load_worker_dependencies()
+    _, _, _, vad_provider_class, _ = _load_worker_dependencies()
     return vad_provider_class()
+
+
+@lru_cache(maxsize=1)
+def get_audio_turn_stt_provider() -> Any:
+    _, _, _, _, stt_provider_class = _load_worker_dependencies()
+    return stt_provider_class()
 
 
 def _audio_duration_ms(audio_buffer: Any) -> int:
@@ -81,7 +92,7 @@ def _audio_duration_ms(audio_buffer: Any) -> int:
 
 
 def _wav_bytes_to_audio_buffer(wav_bytes: bytes) -> Any:
-    _, audio_buffer_class, _, _ = _load_worker_dependencies()
+    _, audio_buffer_class, _, _, _ = _load_worker_dependencies()
     with wave.open(io.BytesIO(wav_bytes), "rb") as wav_file:
         sample_width = wav_file.getsampwidth()
         if sample_width != 2:
@@ -96,7 +107,7 @@ def _wav_bytes_to_audio_buffer(wav_bytes: bytes) -> Any:
 
 
 def _audio_buffer_for_turn(audio_bytes: bytes, mime_type: str) -> Any:
-    normalize_audio, _, speech_artifact_class, _ = _load_worker_dependencies()
+    normalize_audio, _, speech_artifact_class, _, _ = _load_worker_dependencies()
     if mime_type == "audio/wav" or audio_bytes.startswith(b"RIFF"):
         try:
             return _wav_bytes_to_audio_buffer(audio_bytes)
@@ -114,6 +125,30 @@ def _audio_buffer_for_turn(audio_bytes: bytes, mime_type: str) -> Any:
         target_sample_rate_hz=DEFAULT_VAD_SAMPLE_RATE_HZ,
     )
     return _wav_bytes_to_audio_buffer(normalized_artifact.audio_bytes)
+
+
+def _speech_window_audio_buffer(audio_buffer: Any, *, start_ms: int, end_ms: int) -> Any:
+    _, audio_buffer_class, _, _, _ = _load_worker_dependencies()
+    sample_rate_hz = int(getattr(audio_buffer, "sample_rate_hz", 0))
+    channels = int(getattr(audio_buffer, "channels", 1))
+    pcm16 = getattr(audio_buffer, "pcm16", b"")
+    if sample_rate_hz <= 0 or not pcm16:
+        return audio_buffer
+
+    start_sample = max(int(round(start_ms * sample_rate_hz / 1000)), 0)
+    end_sample = max(int(round(end_ms * sample_rate_hz / 1000)), start_sample)
+    start_byte = min(start_sample * 2, len(pcm16))
+    end_byte = min(end_sample * 2, len(pcm16))
+    sliced_pcm16 = pcm16[start_byte:end_byte]
+    if not sliced_pcm16:
+        return audio_buffer
+
+    return audio_buffer_class(
+        pcm16=sliced_pcm16,
+        sample_rate_hz=sample_rate_hz,
+        channels=channels,
+        mime_type=getattr(audio_buffer, "mime_type", "audio/wav"),
+    )
 
 
 def _summarize_segments(
@@ -159,7 +194,8 @@ def process_audio_turn_job(
     job_id: str,
     *,
     job_service: AudioTurnJobService | None = None,
-    provider: Any | None = None,
+    vad_provider: Any | None = None,
+    stt_provider: Any | None = None,
 ) -> AudioTurnJobRecord:
     job_service = job_service or AudioTurnJobService.from_env()
     running_record = job_service.mark_running(job_id)
@@ -167,16 +203,31 @@ def process_audio_turn_job(
     try:
         audio_bytes = job_service.get_audio_path(job_id).read_bytes()
         audio_buffer = _audio_buffer_for_turn(audio_bytes, running_record.audio_mime_type)
-        vad_provider = provider or get_audio_turn_vad_provider()
+        vad_provider = vad_provider or get_audio_turn_vad_provider()
         segments = vad_provider.detect_speech_segments(audio_buffer)
         if not segments:
             raise RuntimeError("No meaningful speech was detected in the captured turn.")
 
         vad_metadata = _summarize_segments(segments, provider_name=vad_provider.provider_name)
+        stt_provider = stt_provider or get_audio_turn_stt_provider()
+        speech_window_audio = _speech_window_audio_buffer(
+            audio_buffer,
+            start_ms=vad_metadata.speech_start_ms,
+            end_ms=vad_metadata.speech_end_ms,
+        )
+        transcript = stt_provider.transcribe(speech_window_audio)
+        transcript_text = getattr(transcript, "text", "").strip()
+        if not transcript_text:
+            raise RuntimeError("The STT provider returned an empty transcript for the captured turn.")
+
         audio_duration_ms = _audio_duration_ms(audio_buffer)
         return job_service.mark_succeeded(
             job_id,
             vad_metadata=vad_metadata,
+            provider_name=stt_provider.provider_name,
+            transcript_text=transcript_text,
+            transcript_language=getattr(transcript, "language", None),
+            transcript_confidence=getattr(transcript, "confidence", None),
             audio_duration_ms=audio_duration_ms,
         )
     except Exception as exc:

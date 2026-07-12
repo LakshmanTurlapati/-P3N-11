@@ -3,7 +3,14 @@ from __future__ import annotations
 import io
 import wave
 
-from providers import AudioBuffer, SpeechSegment, SileroVADProvider
+from providers import (
+    AudioBuffer,
+    FasterWhisperSTTProvider,
+    SpeechSegment,
+    SileroVADProvider,
+    STTProvider,
+    TranscriptResult,
+)
 
 
 def _wav_bytes(
@@ -73,3 +80,43 @@ def test_silero_vad_provider_fixture_fallback_detects_speech_from_wav_only_audio
     assert segments
     assert segments[0].start_ms < segments[0].end_ms
     assert segments[0].confidence is not None
+
+
+class FakeFasterWhisperBackend:
+    provider_name = "faster-whisper"
+
+    def __init__(self) -> None:
+        self.calls: list[AudioBuffer] = []
+
+    def transcribe(self, audio: AudioBuffer) -> TranscriptResult:
+        self.calls.append(audio)
+        return TranscriptResult(text="fixture transcript", language="en", confidence=0.91)
+
+
+def test_faster_whisper_stt_provider_uses_a_backend_and_returns_transcript_metadata() -> None:
+    backend = FakeFasterWhisperBackend()
+    provider = FasterWhisperSTTProvider(backend=backend)
+    audio = _audio_buffer_from_wav_bytes(_wav_bytes(amplitude=900))
+
+    transcript = provider.transcribe(audio)
+
+    assert isinstance(provider, STTProvider)
+    assert provider.provider_name == "faster-whisper"
+    assert backend.calls == [audio]
+    assert transcript == TranscriptResult(
+        text="fixture transcript",
+        language="en",
+        confidence=0.91,
+    )
+
+
+def test_faster_whisper_stt_provider_fixture_fallback_returns_deterministic_transcript() -> None:
+    provider = FasterWhisperSTTProvider(force_fixture_fallback=True)
+    audio = _audio_buffer_from_wav_bytes(_wav_bytes(amplitude=900))
+
+    transcript = provider.transcribe(audio)
+
+    assert provider.provider_name == "faster-whisper"
+    assert transcript.text == "fixture transcript"
+    assert transcript.language == "en"
+    assert transcript.confidence is not None

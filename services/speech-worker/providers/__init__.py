@@ -12,6 +12,7 @@ from .contracts import (
 __all__ = [
     "AudioBuffer",
     "CosyVoiceTTSProvider",
+    "FasterWhisperSTTProvider",
     "SpeechArtifact",
     "SpeechSegment",
     "SpeechToSpeechProvider",
@@ -28,6 +29,10 @@ def __getattr__(name: str):
         from .cosyvoice_provider import CosyVoiceTTSProvider
 
         return CosyVoiceTTSProvider
+    if name == "FasterWhisperSTTProvider":
+        from .faster_whisper_stt_provider import FasterWhisperSTTProvider
+
+        return FasterWhisperSTTProvider
     if name == "SileroVADProvider":
         from .silero_vad_provider import SileroVADProvider
 

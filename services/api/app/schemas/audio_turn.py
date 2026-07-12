@@ -104,6 +104,8 @@ class AudioTurnAttempt(BaseModel):
     mime_type: str | None = None
     error_message: str | None = None
     transcript_text: str | None = None
+    transcript_language: str | None = None
+    transcript_confidence: float | None = Field(default=None, ge=0, le=1)
     vad_provider_name: str | None = None
     vad_confidence: float | None = None
     vad_metadata: AudioTurnVADMetadata | None = None
@@ -117,6 +119,7 @@ class AudioTurnAttempt(BaseModel):
         "mime_type",
         "error_message",
         "transcript_text",
+        "transcript_language",
         "vad_provider_name",
     )
     @classmethod
@@ -145,6 +148,8 @@ class AudioTurnJobRecord(BaseModel):
     vad_confidence: float | None = None
     vad_metadata: AudioTurnVADMetadata | None = None
     audio_duration_ms: int | None = None
+    transcript_language: str | None = None
+    transcript_confidence: float | None = Field(default=None, ge=0, le=1)
     timing: AudioTurnTiming = Field(default_factory=_default_timing)
     attempt: AudioTurnAttempt = Field(default_factory=AudioTurnAttempt)
 
@@ -160,6 +165,7 @@ class AudioTurnJobRecord(BaseModel):
         "provider_name",
         "playback_url",
         "transcript_text",
+        "transcript_language",
         "vad_provider_name",
     )
     @classmethod
@@ -185,6 +191,8 @@ class AudioTurnJobRecord(BaseModel):
                 raise ValueError("succeeded jobs must include VAD provider metadata")
             if self.audio_duration_ms is None or self.attempt.audio_duration_ms is None:
                 raise ValueError("succeeded jobs must include audio duration metadata")
+            if self.transcript_text is None or self.attempt.transcript_text is None:
+                raise ValueError("succeeded jobs must include transcript text metadata")
 
         if self.status == AudioTurnJobStatus.FAILED and not self.attempt.error_message:
             raise ValueError("failed jobs must preserve the error message")
