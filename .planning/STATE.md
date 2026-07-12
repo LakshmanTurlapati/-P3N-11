@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 03
 current_phase_name: audio-input-and-turn-detection
 status: executing
-stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-07-07T17:51:39.926Z"
+stopped_at: Completed 03-02-PLAN.md
+last_updated: "2026-07-12T16:58:09.517Z"
 last_activity: 2026-07-07
 last_activity_desc: Phase 03 execution started
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 12
-  completed_plans: 10
+  completed_plans: 11
   percent: 33
 ---
 
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-06-30)
 ## Current Position
 
 Phase: 03 (audio-input-and-turn-detection) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-07-07 — Phase 03 execution started
 
@@ -70,6 +70,7 @@ Progress: [███░░░░░░░] 33%
 | Phase 02 P05 | 30m | 2 tasks | 4 files |
 | Phase 02 P06 | 55m | 3 tasks | 7 files |
 | Phase 03 P01 | 19m | 3 tasks | 13 files |
+| Phase 03 P02 | 13m 11s | 3 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -118,6 +119,9 @@ Recent decisions affecting current work:
 - [Phase 03]: Kept spoken capture on the same studio surface instead of introducing a separate audio page or mode switcher. — Keeps the capture flow beside the composer and avoids a separate navigation mode.
 - [Phase 03]: Sent capture and upload as raw audio blobs to same-origin /audio-turns routes so the browser can hand off directly to the control plane. — Lets the browser hand captured audio straight to the control plane while keeping the API boundary same-origin.
 - [Phase 03]: Modeled spoken-turn history separately from generation attempts so the session can inspect audio capture without mixing the two workflows. — Prevents spoken input history from being mixed into generation retry state or current clip playback.
+- [Phase 03]: Kept the approved Silero path behind VADProvider, with a deterministic fixture fallback so local tests do not depend on torch or torchaudio being installed.
+- [Phase 03]: Queued audio-turn jobs in the API and polled the session-scoped record in the browser, instead of adding a separate transcript or debug surface.
+- [Phase 03]: Rendered compact turn-boundary metadata inline on spoken-turn cards and kept the capture list separate from generation attempts.
 
 ### Pending Todos
 
@@ -140,6 +144,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-07T17:51:24.032Z
-Stopped at: Completed 03-01-PLAN.md
+Last session: 2026-07-12T16:58:09.513Z
+Stopped at: Completed 03-02-PLAN.md
 Resume file: None
