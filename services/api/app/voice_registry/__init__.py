@@ -1,0 +1,2 @@
+"""Bundled voice registry data."""
+

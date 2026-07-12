@@ -14,12 +14,16 @@ Users can speak or write an input and receive a high-quality spoken response in 
 
 ### Validated
 
-(None yet - ship to validate)
+- [x] Phase 1 validated a no-login studio route at `/` with Vesper Glass visible as an original, rights-bounded theatrical profile.
+- [x] Phase 1 validated server-owned voice rights metadata, backend approval gating, and metadata-only stub generation before any real synthesis provider is introduced.
+- [x] Phase 1 validated typed provider interfaces for VAD, STT, TTS, and speech-to-speech candidates.
+- [x] Phase 2 validated text input, fixed tone presets, queued real-provider generation, controlled audio playback, failure/retry states, and generated-audio metadata.
+- [x] Phase 3 validated browser microphone/upload input, session-scoped audio-turn jobs, VAD boundary metadata, provider-backed STT transcription, editable transcript review, and explicit transcript-to-composer handoff.
 
 ### Active
 
 - [ ] Build a cloud-hosted web app MVP for internal experimentation.
-- [ ] Provide a no-login first version focused on the speech loop and generation workflow.
+- [x] Provide a no-login first version focused on the speech loop and generation workflow.
 - [ ] Support a minimal studio workflow: choose a voice, provide text or audio input, choose a tone preset, and generate speech.
 - [ ] Include live conversation mode in v1 with microphone input, voice activity detection, interruption handling, and spoken responses.
 - [ ] Use only consented or licensed reference voices for cloning.
@@ -45,6 +49,10 @@ Initial model strategy should be modular. A practical baseline is a real-time vo
 
 The voice style prompt can describe an original persona with traits such as measured theatrical delivery, polished sarcasm, charm with cold edges, philosophical cynicism, and manipulative logic. It should not instruct the model to impersonate a copyrighted character or a real actor.
 
+## Current State
+
+Phase 3 is complete as of 2026-07-12. The app has a direct no-login studio shell, server-owned Vesper Glass rights metadata, backend rights enforcement, text input, fixed tone presets, queued CosyVoice-backed generation with controlled playback, browser microphone and upload capture, session-scoped audio-turn jobs, VAD metadata, provider-backed STT transcription, editable transcript review, and explicit transcript-to-generation handoff. Phase 4 starts from that spoken-input loop and adds live conversation mode.
+
 ## Constraints
 
 - **Voice rights**: Only consented or licensed reference voices may be cloned - this avoids building around unauthorized impersonation.
@@ -68,6 +76,10 @@ The voice style prompt can describe an original persona with traits such as meas
 | Keep v1 no-login | The user selected a fast no-login demo focused on the speech loop | - Pending |
 | Use minimal studio controls in v1 | The user selected minimal studio controls for the first version | - Pending |
 | Use a modular benchmark-first model strategy | The user asked the agent to decide; modularity reduces lock-in while still enabling a working baseline | - Pending |
+| Keep Phase 1 generation metadata-only | The first vertical skeleton should prove web-to-API shape and rights gating before introducing real synthesis latency, playback, or storage | Implemented in Phase 1 |
+| Keep Phase 2 generation queued-first | The browser should receive immediate job state while provider synthesis runs through the backend runtime and records success or failure | Implemented in Phase 2 |
+| Verify browser playback against live generation routes | Route mocks hid the real-provider gap; live Playwright coverage now proves `/generate`, status polling, and controlled audio playback together | Implemented in Phase 2 |
+| Keep Phase 3 spoken input session-scoped with explicit transcript handoff | Audio turns should support review and reuse without overwriting generation drafts or creating a durable library in the no-login MVP | Implemented in Phase 3 |
 
 ## Evolution
 
@@ -87,4 +99,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-30 after initialization*
+*Last updated: 2026-07-12 after Phase 3 completion*

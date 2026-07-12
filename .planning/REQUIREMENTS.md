@@ -9,34 +9,34 @@ Requirements for the initial internal no-login web app. Each maps to exactly one
 
 ### Governance
 
-- [ ] **GOV-01**: User can only generate with a voice profile that has explicit rights metadata.
-- [ ] **GOV-02**: System blocks generation requests for voice profiles that are not approved for generation.
-- [ ] **GOV-03**: First bundled voice profile is described as an original theatrical trickster voice, not as Marvel Loki, Tom Hiddleston, or any other unlicensed identity.
-- [ ] **GOV-04**: User can attach or record consent/license notes for a voice reference before that voice is used for cloning.
+- [x] **GOV-01**: User can only generate with a voice profile that has explicit rights metadata.
+- [x] **GOV-02**: System blocks generation requests for voice profiles that are not approved for generation.
+- [x] **GOV-03**: First bundled voice profile is described as an original theatrical trickster voice, not as Marvel Loki, Tom Hiddleston, or any other unlicensed identity.
+- [x] **GOV-04**: User can attach or record consent/license notes for a voice reference before that voice is used for cloning.
 
 ### Studio
 
-- [ ] **STUD-01**: User can open a no-login web studio.
-- [ ] **STUD-02**: User can select the bundled original theatrical voice profile.
-- [ ] **STUD-03**: User can enter text to synthesize into speech.
-- [ ] **STUD-04**: User can choose a tone preset for generation.
-- [ ] **STUD-05**: User can submit a generation request and see loading, success, and error states.
-- [ ] **STUD-06**: User can play the generated audio in the browser.
-- [ ] **STUD-07**: User can retry a failed generation without refreshing the app.
+- [x] **STUD-01**: User can open a no-login web studio.
+- [x] **STUD-02**: User can select the bundled original theatrical voice profile.
+- [x] **STUD-03**: User can enter text to synthesize into speech.
+- [x] **STUD-04**: User can choose a tone preset for generation.
+- [x] **STUD-05**: User can submit a generation request and see loading, success, and error states.
+- [x] **STUD-06**: User can play the generated audio in the browser.
+- [x] **STUD-07**: User can retry a failed generation without refreshing the app.
 
 ### Speech Pipeline
 
-- [ ] **PIPE-01**: System exposes provider interfaces for VAD, STT, TTS, and speech-to-speech candidates.
-- [ ] **PIPE-02**: System can synthesize speech through at least one real TTS or voice-cloning provider adapter.
-- [ ] **PIPE-03**: System stores generated audio with metadata that includes provider, voice profile, tone preset, and generation timing.
-- [ ] **PIPE-04**: System can normalize uploaded, recorded, or generated audio into formats accepted by the selected providers.
+- [x] **PIPE-01**: System exposes provider interfaces for VAD, STT, TTS, and speech-to-speech candidates.
+- [x] **PIPE-02**: System can synthesize speech through at least one real TTS or voice-cloning provider adapter.
+- [x] **PIPE-03**: System stores generated audio with metadata that includes provider, voice profile, tone preset, and generation timing.
+- [x] **PIPE-04**: System can normalize uploaded, recorded, or generated audio into formats accepted by the selected providers.
 
 ### Audio Input
 
-- [ ] **AUD-01**: User can provide spoken input through the browser microphone or an uploaded audio clip.
-- [ ] **AUD-02**: System can detect speech boundaries using a VAD provider.
-- [ ] **AUD-03**: System can transcribe user speech through an STT provider.
-- [ ] **AUD-04**: User can see or inspect the recognized transcript before or during speech-to-speech generation.
+- [x] **AUD-01**: User can provide spoken input through the browser microphone or an uploaded audio clip.
+- [x] **AUD-02**: System can detect speech boundaries using a VAD provider.
+- [x] **AUD-03**: System can transcribe user speech through an STT provider.
+- [x] **AUD-04**: User can see or inspect the recognized transcript before or during speech-to-speech generation.
 
 ### Conversation
 
@@ -103,25 +103,25 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| GOV-01 | Phase 1 | Pending |
-| GOV-02 | Phase 1 | Pending |
-| GOV-03 | Phase 1 | Pending |
-| GOV-04 | Phase 2 | Pending |
-| STUD-01 | Phase 1 | Pending |
-| STUD-02 | Phase 1 | Pending |
-| STUD-03 | Phase 2 | Pending |
-| STUD-04 | Phase 2 | Pending |
-| STUD-05 | Phase 2 | Pending |
-| STUD-06 | Phase 2 | Pending |
-| STUD-07 | Phase 2 | Pending |
-| PIPE-01 | Phase 1 | Pending |
-| PIPE-02 | Phase 2 | Pending |
-| PIPE-03 | Phase 2 | Pending |
-| PIPE-04 | Phase 2 | Pending |
-| AUD-01 | Phase 3 | Pending |
-| AUD-02 | Phase 3 | Pending |
-| AUD-03 | Phase 3 | Pending |
-| AUD-04 | Phase 3 | Pending |
+| GOV-01 | Phase 1 | Complete |
+| GOV-02 | Phase 1 | Complete |
+| GOV-03 | Phase 1 | Complete |
+| GOV-04 | Phase 2 | Complete |
+| STUD-01 | Phase 1 | Complete |
+| STUD-02 | Phase 1 | Complete |
+| STUD-03 | Phase 2 | Complete |
+| STUD-04 | Phase 2 | Complete |
+| STUD-05 | Phase 2 | Complete |
+| STUD-06 | Phase 2 | Complete |
+| STUD-07 | Phase 2 | Complete |
+| PIPE-01 | Phase 1 | Complete |
+| PIPE-02 | Phase 2 | Complete |
+| PIPE-03 | Phase 2 | Complete |
+| PIPE-04 | Phase 2 | Complete |
+| AUD-01 | Phase 3 | Complete |
+| AUD-02 | Phase 3 | Complete |
+| AUD-03 | Phase 3 | Complete |
+| AUD-04 | Phase 3 | Complete |
 | CONV-01 | Phase 4 | Pending |
 | CONV-02 | Phase 4 | Pending |
 | CONV-03 | Phase 4 | Pending |
@@ -139,6 +139,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DEP-05 | Phase 6 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 34 total
 - Mapped to phases: 34
 - Unmapped: 0
