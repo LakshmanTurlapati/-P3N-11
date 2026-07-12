@@ -4,17 +4,17 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 03
 current_phase_name: audio-input-and-turn-detection
-status: executing
-stopped_at: Completed 03-02-PLAN.md
-last_updated: "2026-07-12T16:58:09.517Z"
+status: verifying
+stopped_at: Completed 03-03-PLAN.md
+last_updated: "2026-07-12T17:30:54.821Z"
 last_activity: 2026-07-07
 last_activity_desc: Phase 03 execution started
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 12
-  completed_plans: 11
-  percent: 33
+  completed_plans: 12
+  percent: 50
 ---
 
 # Project State
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-06-30)
 
 Phase: 03 (audio-input-and-turn-detection) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-07-07 — Phase 03 execution started
 
 Progress: [███░░░░░░░] 33%
@@ -71,6 +71,7 @@ Progress: [███░░░░░░░] 33%
 | Phase 02 P06 | 55m | 3 tasks | 7 files |
 | Phase 03 P01 | 19m | 3 tasks | 13 files |
 | Phase 03 P02 | 13m 11s | 3 tasks | 11 files |
+| Phase 03-audio-input-and-turn-detection P03 | 29 min | 3 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -122,6 +123,9 @@ Recent decisions affecting current work:
 - [Phase 03]: Kept the approved Silero path behind VADProvider, with a deterministic fixture fallback so local tests do not depend on torch or torchaudio being installed.
 - [Phase 03]: Queued audio-turn jobs in the API and polled the session-scoped record in the browser, instead of adding a separate transcript or debug surface.
 - [Phase 03]: Rendered compact turn-boundary metadata inline on spoken-turn cards and kept the capture list separate from generation attempts.
+- [Phase 03]: Use a faster-whisper-compatible STT provider behind STTProvider with deterministic fixture fallback so the worker/runtime boundary stays intact. — Keeps the worker boundary intact and makes local validation deterministic.
+- [Phase 03]: Persist transcript language and confidence on the same session-scoped audio-turn record that stores VAD metadata. — Keeps VAD and transcript review on the same auditable record.
+- [Phase 03]: Keep transcript review separate from the generation composer and require an explicit Use as generation text action to copy the transcript. — Prevents silent overwrites of the generation draft and matches the plan's no-overwrite handoff.
 
 ### Pending Todos
 
@@ -144,6 +148,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-12T16:58:09.513Z
-Stopped at: Completed 03-02-PLAN.md
+Last session: 2026-07-12T17:30:54.816Z
+Stopped at: Completed 03-03-PLAN.md
 Resume file: None
