@@ -140,6 +140,16 @@ async function installMediaRecorderMock(page: Page, wavBytes: Buffer) {
   );
 }
 
+async function waitForAudioTurnStatus(page: Page, jobId: string, expectedStatus: string) {
+  await expect
+    .poll(async () => {
+      const response = await page.request.get(`/audio-turns/${jobId}`);
+      const payload = (await response.json()) as { status?: string };
+      return payload.status;
+    })
+    .toBe(expectedStatus);
+}
+
 test.describe.configure({ timeout: LIVE_TEST_TIMEOUT_MS });
 
 test("spoken input controls are visible, labeled, and keyboard-focusable", async ({
@@ -261,4 +271,67 @@ test("uploading audio exposes a weak-turn warning and keeps it separate", async 
   await expect(spokenTurns).toContainText("Speech duration");
   await expect(spokenTurns).toContainText("Confidence");
   await expect(recentAttempts).not.toContainText(audioTurnRecord.job_id);
+});
+
+test("transcript review stays editable and only copies into the composer on demand", async ({
+  page,
+}) => {
+  const speechWav = buildWavBytes({ amplitude: 16_000, speechMs: 720 });
+  await page.goto("/");
+
+  const generationText = page.getByRole("textbox", { name: "Generation text" });
+  const spokenTurns = page.getByRole("list", { name: "Spoken turns" });
+
+  const audioTurnResponsePromise = page.waitForResponse(
+    (response) =>
+      response.request().method() === "POST" &&
+      response.url().endsWith("/audio-turns") &&
+      response.status() === 200,
+  );
+
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "spoken-turn.wav",
+    mimeType: "audio/wav",
+    buffer: speechWav,
+  });
+
+  const audioTurnResponse = await audioTurnResponsePromise;
+  const audioTurnRecord = (await audioTurnResponse.json()) as {
+    job_id: string;
+    status: string;
+  };
+
+  expect(audioTurnRecord.status).toBe("queued");
+  await waitForAudioTurnStatus(page, audioTurnRecord.job_id, "succeeded");
+
+  const spokenTurnCard = spokenTurns
+    .locator("article")
+    .filter({
+      has: page.getByRole("heading", { name: audioTurnRecord.job_id }),
+    })
+    .first();
+  const transcriptField = spokenTurnCard.getByRole("textbox", {
+    name: "Transcript review",
+  });
+  const useAsGenerationTextButton = spokenTurnCard.getByRole("button", {
+    name: "Use as generation text",
+  });
+
+  await expect(transcriptField).toBeVisible();
+  await expect(transcriptField).toBeEditable();
+  await expect(useAsGenerationTextButton).toBeEnabled();
+  await expect(generationText).toHaveValue("");
+
+  const originalTranscript = await transcriptField.inputValue();
+  expect(originalTranscript.length).toBeGreaterThan(0);
+  const reviewedTranscript = `${originalTranscript} with one theatrical edit`;
+
+  await transcriptField.fill(reviewedTranscript);
+  await expect(transcriptField).toHaveValue(reviewedTranscript);
+
+  await expect(generationText).toHaveValue("");
+
+  await useAsGenerationTextButton.click();
+
+  await expect(generationText).toHaveValue(reviewedTranscript);
 });

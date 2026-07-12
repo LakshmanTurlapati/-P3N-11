@@ -95,6 +95,8 @@ type AudioTurnAttemptRecord = {
   mime_type: string | null;
   error_message: string | null;
   transcript_text: string | null;
+  transcript_language: string | null;
+  transcript_confidence: number | null;
   vad_provider_name: string | null;
   vad_confidence: number | null;
   vad_metadata: AudioTurnVADMetadataRecord | null;
@@ -114,6 +116,8 @@ type AudioTurnJobRecord = {
   audio_mime_type: string;
   playback_url: string | null;
   transcript_text: string | null;
+  transcript_language: string | null;
+  transcript_confidence: number | null;
   vad_provider_name: string | null;
   vad_confidence: number | null;
   vad_metadata: AudioTurnVADMetadataRecord | null;
@@ -154,7 +158,10 @@ function formatJobStatus(status: GenerationJobStatus) {
   return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
-function formatProviderLabel(record: GenerationJobRecord) {
+function formatProviderLabel(record: {
+  provider_type: string | null;
+  provider_name: string | null;
+}) {
   return record.provider_name ?? record.provider_type ?? "Provider pending";
 }
 
@@ -203,6 +210,14 @@ function formatVadConfidenceLabel(metadata: AudioTurnVADMetadataRecord | null) {
   }
 
   return `${Math.round(metadata.confidence * 100)}%`;
+}
+
+function formatTranscriptConfidenceLabel(confidence: number | null) {
+  if (confidence === null) {
+    return "Pending";
+  }
+
+  return `${Math.round(confidence * 100)}%`;
 }
 
 function formatRecordingTimer(durationMs: number) {
@@ -422,7 +437,66 @@ function RecentAttemptList({
   );
 }
 
-function SpokenTurnList({ turns }: { turns: AudioTurnJobRecord[] }) {
+function TranscriptReviewField({
+  turn,
+  transcriptValue,
+  onTranscriptChange,
+}: {
+  turn: AudioTurnJobRecord;
+  transcriptValue: string;
+  onTranscriptChange: (nextTranscript: string) => void;
+}) {
+  const transcriptFieldId = `transcript-${turn.job_id}`;
+
+  return (
+    <div className="field-group field-group--wide spoken-turn-card__transcript">
+      <label htmlFor={transcriptFieldId}>Transcript review</label>
+      <textarea
+        id={transcriptFieldId}
+        name={transcriptFieldId}
+        value={transcriptValue}
+        placeholder={
+          turn.status === "succeeded"
+            ? "Edit the transcript before using it as generation text."
+            : "The transcript will appear here after transcription."
+        }
+        readOnly={turn.status !== "succeeded"}
+        rows={4}
+        onChange={(event) => onTranscriptChange(event.target.value)}
+      />
+    </div>
+  );
+}
+
+function UseAsGenerationTextButton({
+  disabled,
+  onUse,
+}: {
+  disabled: boolean;
+  onUse: () => void;
+}) {
+  return (
+    <button type="button" className="studio-action" disabled={disabled} onClick={onUse}>
+      Use as generation text
+    </button>
+  );
+}
+
+function SpokenTurnList({
+  turns,
+  transcriptDrafts,
+  onTranscriptDraftChange,
+  onUseAsGenerationText,
+  onRequestReRecord,
+  onRequestReUpload,
+}: {
+  turns: AudioTurnJobRecord[];
+  transcriptDrafts: Record<string, string>;
+  onTranscriptDraftChange: (jobId: string, nextTranscript: string) => void;
+  onUseAsGenerationText: (transcript: string) => void;
+  onRequestReRecord: () => void;
+  onRequestReUpload: () => void;
+}) {
   return (
     <section className="recent-attempts" aria-labelledby="spoken-turns-title">
       <header className="recent-attempts__header">
@@ -439,62 +513,114 @@ function SpokenTurnList({ turns }: { turns: AudioTurnJobRecord[] }) {
         {turns.length === 0 ? (
           <li className="recent-attempts__empty">No spoken turns yet</li>
         ) : (
-          turns.map((turn) => (
-            <li key={turn.job_id}>
-              <article
-                className={`attempt-card attempt-card--${turn.status}`}
-                aria-labelledby={`spoken-turn-${turn.job_id}`}
-              >
-                <header className="attempt-card__header">
-                  <p className="attempt-card__kicker">{formatJobStatus(turn.status)}</p>
-                  <h3 id={`spoken-turn-${turn.job_id}`}>{turn.job_id}</h3>
-                </header>
+          turns.map((turn) => {
+            const transcriptValue = transcriptDrafts[turn.job_id] ?? turn.transcript_text ?? "";
+            const canUseTranscript =
+              turn.status === "succeeded" && transcriptValue.trim().length > 0;
 
-                <dl className="attempt-card__details">
-                  <div>
-                    <dt>Source</dt>
-                    <dd>{formatAudioTurnSourceLabel(turn.capture_source)}</dd>
-                  </div>
-                  <div>
-                    <dt>File</dt>
-                    <dd>{turn.audio_filename}</dd>
-                  </div>
-                  <div>
-                    <dt>MIME</dt>
-                    <dd>{turn.audio_mime_type}</dd>
-                  </div>
-                  <div>
-                    <dt>Status</dt>
-                    <dd>{formatJobStatus(turn.status)}</dd>
-                  </div>
-                  <div>
-                    <dt>VAD provider</dt>
-                    <dd>
-                      {formatVadProviderLabel(
-                        turn.vad_metadata?.provider_name ?? turn.vad_provider_name,
-                      )}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Speech range</dt>
-                    <dd>{formatVadRangeLabel(turn.vad_metadata)}</dd>
-                  </div>
-                  <div>
-                    <dt>Speech duration</dt>
-                    <dd>{formatVadDurationLabel(turn.vad_metadata)}</dd>
-                  </div>
-                  <div>
-                    <dt>Confidence</dt>
-                    <dd>{formatVadConfidenceLabel(turn.vad_metadata)}</dd>
-                  </div>
-                </dl>
+            return (
+              <li key={turn.job_id}>
+                <article
+                  className={`attempt-card attempt-card--${turn.status}`}
+                  aria-labelledby={`spoken-turn-${turn.job_id}`}
+                >
+                  <header className="attempt-card__header">
+                    <p className="attempt-card__kicker">{formatJobStatus(turn.status)}</p>
+                    <h3 id={`spoken-turn-${turn.job_id}`}>{turn.job_id}</h3>
+                  </header>
 
-                {turn.vad_metadata?.warning_message ? (
-                  <p className="generation-state">{turn.vad_metadata.warning_message}</p>
-                ) : null}
-              </article>
-            </li>
-          ))
+                  <dl className="attempt-card__details">
+                    <div>
+                      <dt>Source</dt>
+                      <dd>{formatAudioTurnSourceLabel(turn.capture_source)}</dd>
+                    </div>
+                    <div>
+                      <dt>File</dt>
+                      <dd>{turn.audio_filename}</dd>
+                    </div>
+                    <div>
+                      <dt>MIME</dt>
+                      <dd>{turn.audio_mime_type}</dd>
+                    </div>
+                    <div>
+                      <dt>Status</dt>
+                      <dd>{formatJobStatus(turn.status)}</dd>
+                    </div>
+                    <div>
+                      <dt>Provider</dt>
+                      <dd>{formatProviderLabel(turn)}</dd>
+                    </div>
+                    <div>
+                      <dt>Transcript language</dt>
+                      <dd>{turn.transcript_language ?? "Pending"}</dd>
+                    </div>
+                    <div>
+                      <dt>Transcript confidence</dt>
+                      <dd>{formatTranscriptConfidenceLabel(turn.transcript_confidence)}</dd>
+                    </div>
+                    <div>
+                      <dt>VAD provider</dt>
+                      <dd>
+                        {formatVadProviderLabel(
+                          turn.vad_metadata?.provider_name ?? turn.vad_provider_name,
+                        )}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Speech range</dt>
+                      <dd>{formatVadRangeLabel(turn.vad_metadata)}</dd>
+                    </div>
+                    <div>
+                      <dt>Speech duration</dt>
+                      <dd>{formatVadDurationLabel(turn.vad_metadata)}</dd>
+                    </div>
+                    <div>
+                      <dt>Confidence</dt>
+                      <dd>{formatVadConfidenceLabel(turn.vad_metadata)}</dd>
+                    </div>
+                  </dl>
+
+                  <TranscriptReviewField
+                    turn={turn}
+                    transcriptValue={transcriptValue}
+                    onTranscriptChange={(nextTranscript) =>
+                      onTranscriptDraftChange(turn.job_id, nextTranscript)
+                    }
+                  />
+
+                  <div className="generation-form__footer spoken-turn-card__footer">
+                    <UseAsGenerationTextButton
+                      disabled={!canUseTranscript}
+                      onUse={() => onUseAsGenerationText(transcriptValue)}
+                    />
+
+                    {turn.status === "failed" || turn.vad_metadata?.warning_message ? (
+                      <>
+                        <button
+                          type="button"
+                          className="studio-action studio-action--secondary"
+                          onClick={onRequestReRecord}
+                        >
+                          Re-record
+                        </button>
+                        <button
+                          type="button"
+                          className="studio-action studio-action--secondary"
+                          onClick={onRequestReUpload}
+                        >
+                          Re-upload
+                        </button>
+                      </>
+                    ) : null}
+                  </div>
+
+                  {turn.vad_metadata?.warning_message ? (
+                    <p className="generation-state">{turn.vad_metadata.warning_message}</p>
+                  ) : null}
+                </article>
+              </li>
+            );
+          })
         )}
       </ol>
     </section>
@@ -517,6 +643,7 @@ export function StudioShell() {
     null,
   );
   const [spokenTurns, setSpokenTurns] = useState<AudioTurnJobRecord[]>([]);
+  const [transcriptDrafts, setTranscriptDrafts] = useState<Record<string, string>>({});
   const [captureMessage, setCaptureMessage] = useState("Ready to record");
   const [captureError, setCaptureError] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -789,6 +916,18 @@ export function StudioShell() {
     }
 
     await submitGeneration(lastSubmission);
+  }
+
+  function updateTranscriptDraft(jobId: string, nextTranscript: string) {
+    setTranscriptDrafts((currentDrafts) => ({
+      ...currentDrafts,
+      [jobId]: nextTranscript,
+    }));
+  }
+
+  function useTranscriptForGeneration(transcript: string) {
+    setGenerationError(null);
+    setGenerationText(transcript);
   }
 
   useEffect(() => {
@@ -1176,7 +1315,14 @@ export function StudioShell() {
               </p>
             ) : null}
 
-            <SpokenTurnList turns={spokenTurns} />
+            <SpokenTurnList
+              turns={spokenTurns}
+              transcriptDrafts={transcriptDrafts}
+              onTranscriptDraftChange={updateTranscriptDraft}
+              onUseAsGenerationText={useTranscriptForGeneration}
+              onRequestReRecord={handleAudioButtonClick}
+              onRequestReUpload={triggerAudioUpload}
+            />
 
             <CurrentClipCard currentClip={currentClip} latestAttempt={latestAttempt} />
 

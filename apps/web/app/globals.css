@@ -607,6 +607,14 @@ button {
   background: rgba(255, 255, 255, 0.025);
 }
 
+.spoken-turn-card__transcript {
+  margin-top: 0.1rem;
+}
+
+.spoken-turn-card__footer {
+  justify-content: flex-start;
+}
+
 .attempt-card--succeeded {
   border-color: rgba(214, 160, 106, 0.42);
 }
