@@ -73,6 +73,22 @@ type GenerationResponseError = {
 type AudioTurnCaptureSource = "recording" | "upload";
 type AudioTurnJobStatus = "queued" | "running" | "succeeded" | "failed";
 
+type AudioTurnVADSegmentRecord = {
+  start_ms: number;
+  end_ms: number;
+  confidence: number | null;
+};
+
+type AudioTurnVADMetadataRecord = {
+  provider_name: string;
+  segments: AudioTurnVADSegmentRecord[];
+  speech_start_ms: number;
+  speech_end_ms: number;
+  speech_duration_ms: number;
+  confidence: number | null;
+  warning_message: string | null;
+};
+
 type AudioTurnAttemptRecord = {
   status: AudioTurnJobStatus;
   provider_name: string | null;
@@ -81,6 +97,7 @@ type AudioTurnAttemptRecord = {
   transcript_text: string | null;
   vad_provider_name: string | null;
   vad_confidence: number | null;
+  vad_metadata: AudioTurnVADMetadataRecord | null;
   audio_duration_ms: number | null;
   started_at: string;
   ended_at: string;
@@ -99,6 +116,7 @@ type AudioTurnJobRecord = {
   transcript_text: string | null;
   vad_provider_name: string | null;
   vad_confidence: number | null;
+  vad_metadata: AudioTurnVADMetadataRecord | null;
   audio_duration_ms: number | null;
   timing: {
     started_at: string;
@@ -149,6 +167,42 @@ function formatToneLabel(tonePreset: GenerationTonePreset) {
 
 function formatAudioTurnSourceLabel(source: AudioTurnCaptureSource) {
   return source === "recording" ? "Recording" : "Upload";
+}
+
+function formatVadProviderLabel(providerName: string | null) {
+  if (!providerName) {
+    return "Provider pending";
+  }
+
+  return providerName
+    .replace(/[-_]/g, " ")
+    .split(" ")
+    .map((word) => (word.toLowerCase() === "vad" ? "VAD" : word.charAt(0).toUpperCase() + word.slice(1)))
+    .join(" ");
+}
+
+function formatVadRangeLabel(metadata: AudioTurnVADMetadataRecord | null) {
+  if (!metadata) {
+    return "Pending";
+  }
+
+  return `${metadata.speech_start_ms} ms - ${metadata.speech_end_ms} ms`;
+}
+
+function formatVadDurationLabel(metadata: AudioTurnVADMetadataRecord | null) {
+  if (!metadata) {
+    return "Pending";
+  }
+
+  return `${metadata.speech_duration_ms} ms`;
+}
+
+function formatVadConfidenceLabel(metadata: AudioTurnVADMetadataRecord | null) {
+  if (!metadata || metadata.confidence === null) {
+    return "Pending";
+  }
+
+  return `${Math.round(metadata.confidence * 100)}%`;
 }
 
 function formatRecordingTimer(durationMs: number) {
@@ -376,7 +430,8 @@ function SpokenTurnList({ turns }: { turns: AudioTurnJobRecord[] }) {
         <h2 id="spoken-turns-title">Spoken turns</h2>
         <p className="recent-attempts__lede">
           Keep spoken capture separate from generation attempts. Each turn stays
-          in the current session until the page refreshes.
+          in the current session until the page refreshes, with compact VAD
+          metadata shown inline once the worker finishes analyzing it.
         </p>
       </header>
 
@@ -412,7 +467,31 @@ function SpokenTurnList({ turns }: { turns: AudioTurnJobRecord[] }) {
                     <dt>Status</dt>
                     <dd>{formatJobStatus(turn.status)}</dd>
                   </div>
+                  <div>
+                    <dt>VAD provider</dt>
+                    <dd>
+                      {formatVadProviderLabel(
+                        turn.vad_metadata?.provider_name ?? turn.vad_provider_name,
+                      )}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Speech range</dt>
+                    <dd>{formatVadRangeLabel(turn.vad_metadata)}</dd>
+                  </div>
+                  <div>
+                    <dt>Speech duration</dt>
+                    <dd>{formatVadDurationLabel(turn.vad_metadata)}</dd>
+                  </div>
+                  <div>
+                    <dt>Confidence</dt>
+                    <dd>{formatVadConfidenceLabel(turn.vad_metadata)}</dd>
+                  </div>
                 </dl>
+
+                {turn.vad_metadata?.warning_message ? (
+                  <p className="generation-state">{turn.vad_metadata.warning_message}</p>
+                ) : null}
               </article>
             </li>
           ))
@@ -433,6 +512,7 @@ export function StudioShell() {
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
+  const [activeAudioTurnId, setActiveAudioTurnId] = useState<string | null>(null);
   const [lastSubmission, setLastSubmission] = useState<GenerationSubmission | null>(
     null,
   );
@@ -448,6 +528,7 @@ export function StudioShell() {
   const recordingChunksRef = useRef<Blob[]>([]);
   const recordingTimerRef = useRef<number | null>(null);
   const pollTimerRef = useRef<number | null>(null);
+  const audioTurnPollTimerRef = useRef<number | null>(null);
 
   const selectedVoice =
     voiceDisplaySeeds.find((voice) => voice.id === selectedVoiceId) ??
@@ -550,6 +631,7 @@ export function StudioShell() {
       setSpokenTurns((currentTurns) => upsertRecord(currentTurns, audioTurnRecord));
       setCaptureMessage("Queued");
       setCaptureError(null);
+      setActiveAudioTurnId(audioTurnRecord.job_id);
       return audioTurnRecord;
     } catch (error) {
       const message =
@@ -608,7 +690,7 @@ export function StudioShell() {
         void submitAudioTurn(
           recordingBlob,
           "recording",
-          "spoken-turn.webm",
+          "spoken-turn.wav",
         ).catch(() => undefined);
       };
 
@@ -799,11 +881,85 @@ export function StudioShell() {
     };
   }, [activeJobId]);
 
+  useEffect(() => {
+    if (!activeAudioTurnId) {
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    const pollAudioTurn = async () => {
+      try {
+        const response = await fetch(`/audio-turns/${activeAudioTurnId}`);
+        const payload = (await response.json()) as AudioTurnJobRecord & {
+          detail?: string;
+        };
+        const responseError = payload as GenerationResponseError;
+
+        if (!response.ok) {
+          throw new Error(
+            typeof responseError.detail === "string"
+              ? responseError.detail
+              : "Failed to poll spoken-turn status.",
+          );
+        }
+
+        if (cancelled) {
+          return;
+        }
+
+        setSpokenTurns((currentTurns) => upsertRecord(currentTurns, payload));
+
+        if (payload.status === "queued" || payload.status === "running") {
+          audioTurnPollTimerRef.current = window.setTimeout(() => {
+            void pollAudioTurn();
+          }, POLL_INTERVAL_MS);
+          return;
+        }
+
+        setActiveAudioTurnId(null);
+        if (payload.status === "failed") {
+          setCaptureError(
+            payload.attempt.error_message ?? "Spoken turn processing failed.",
+          );
+        } else {
+          setCaptureError(null);
+        }
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
+
+        setCaptureError(
+          error instanceof Error ? error.message : "Failed to poll spoken-turn status.",
+        );
+        setActiveAudioTurnId(null);
+      }
+    };
+
+    audioTurnPollTimerRef.current = window.setTimeout(() => {
+      void pollAudioTurn();
+    }, POLL_INTERVAL_MS);
+
+    return () => {
+      cancelled = true;
+      if (audioTurnPollTimerRef.current !== null) {
+        window.clearTimeout(audioTurnPollTimerRef.current);
+        audioTurnPollTimerRef.current = null;
+      }
+    };
+  }, [activeAudioTurnId]);
+
   useEffect(
     () => () => {
       if (recordingTimerRef.current !== null) {
         window.clearInterval(recordingTimerRef.current);
         recordingTimerRef.current = null;
+      }
+
+      if (audioTurnPollTimerRef.current !== null) {
+        window.clearTimeout(audioTurnPollTimerRef.current);
+        audioTurnPollTimerRef.current = null;
       }
 
       mediaStreamRef.current?.getTracks().forEach((track) => track.stop());

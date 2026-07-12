@@ -20,7 +20,7 @@ export default defineConfig({
   webServer: [
     {
       command:
-        "cd ../.. && .venv/bin/python -m uvicorn services.api.app.main:app --host 127.0.0.1 --port 8000",
+        "cd ../.. && THEATRICAL_VOICE_STUDIO_VAD_FIXTURE=1 .venv/bin/python -m uvicorn services.api.app.main:app --host 127.0.0.1 --port 8000",
       url: "http://127.0.0.1:8000/voices",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,

@@ -2,7 +2,51 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 
 const LIVE_TEST_TIMEOUT_MS = 120_000;
 
-const SPOKEN_TURN_AUDIO = Buffer.from("spoken-turn-audio");
+function buildWavBytes({
+  sampleRateHz = 16_000,
+  leadSilenceMs = 120,
+  speechMs = 720,
+  trailSilenceMs = 120,
+  amplitude = 16_000,
+}: {
+  sampleRateHz?: number;
+  leadSilenceMs?: number;
+  speechMs?: number;
+  trailSilenceMs?: number;
+  amplitude?: number;
+}): Buffer {
+  const samples: number[] = [];
+  for (const [durationMs, sampleValue] of [
+    [leadSilenceMs, 0],
+    [speechMs, amplitude],
+    [trailSilenceMs, 0],
+  ] as const) {
+    const sampleCount = Math.max(Math.floor((sampleRateHz * durationMs) / 1000), 1);
+    samples.push(...Array(sampleCount).fill(sampleValue));
+  }
+
+  const dataSize = samples.length * 2;
+  const buffer = Buffer.alloc(44 + dataSize);
+  buffer.write("RIFF", 0);
+  buffer.writeUInt32LE(36 + dataSize, 4);
+  buffer.write("WAVE", 8);
+  buffer.write("fmt ", 12);
+  buffer.writeUInt32LE(16, 16);
+  buffer.writeUInt16LE(1, 20);
+  buffer.writeUInt16LE(1, 22);
+  buffer.writeUInt32LE(sampleRateHz, 24);
+  buffer.writeUInt32LE(sampleRateHz * 2, 28);
+  buffer.writeUInt16LE(2, 32);
+  buffer.writeUInt16LE(16, 34);
+  buffer.write("data", 36);
+  buffer.writeUInt32LE(dataSize, 40);
+
+  samples.forEach((sample, index) => {
+    buffer.writeInt16LE(sample, 44 + index * 2);
+  });
+
+  return buffer;
+}
 
 async function tabUntilFocused(page: Page, target: Locator, maxTabs = 12) {
   for (let index = 0; index < maxTabs; index += 1) {
@@ -16,77 +60,84 @@ async function tabUntilFocused(page: Page, target: Locator, maxTabs = 12) {
   throw new Error("Could not reach the expected control with keyboard navigation.");
 }
 
-async function installMediaRecorderMock(page: Page) {
-  await page.addInitScript(() => {
-    class FakeMediaStreamTrack {
-      kind = "audio";
-      enabled = true;
+async function installMediaRecorderMock(page: Page, wavBytes: Buffer) {
+  await page.addInitScript(
+    ({ wavBytesBase64 }) => {
+      class FakeMediaStreamTrack {
+        kind = "audio";
+        enabled = true;
 
-      stop() {}
-    }
-
-    class FakeMediaStream {
-      getTracks() {
-        return [new FakeMediaStreamTrack()];
+        stop() {}
       }
 
-      getAudioTracks() {
-        return [new FakeMediaStreamTrack()];
-      }
-    }
+      class FakeMediaStream {
+        getTracks() {
+          return [new FakeMediaStreamTrack()];
+        }
 
-    class FakeMediaRecorder {
-      stream: MediaStream;
-      state: "inactive" | "recording";
-      mimeType: string;
-      ondataavailable?: (event: { data: Blob }) => void;
-      onstop?: (event: Event) => void;
-      onstart?: (event: Event) => void;
-
-      static isTypeSupported(type: string): boolean {
-        return type === "audio/webm" || type === "audio/webm;codecs=opus";
-      }
-
-      constructor(stream: MediaStream, options: { mimeType?: string } = {}) {
-        this.stream = stream;
-        this.state = "inactive";
-        this.mimeType = options.mimeType ?? "audio/webm";
-      }
-
-      start(): void {
-        this.state = "recording";
-        if (typeof this.onstart === "function") {
-          this.onstart(new Event("start"));
+        getAudioTracks() {
+          return [new FakeMediaStreamTrack()];
         }
       }
 
-      stop(): void {
-        this.state = "inactive";
-        if (typeof this.ondataavailable === "function") {
-          this.ondataavailable({
-            data: new Blob([new Uint8Array([1, 2, 3, 4])], {
-              type: this.mimeType,
-            }),
-          });
+      class FakeMediaRecorder {
+        stream: MediaStream;
+        state: "inactive" | "recording";
+        mimeType: string;
+        ondataavailable?: (event: { data: Blob }) => void;
+        onstop?: (event: Event) => void;
+        onstart?: (event: Event) => void;
+
+        static isTypeSupported(type: string): boolean {
+          return type === "audio/webm" || type === "audio/webm;codecs=opus";
         }
-        if (typeof this.onstop === "function") {
-          this.onstop(new Event("stop"));
+
+        constructor(stream: MediaStream, options: { mimeType?: string } = {}) {
+          this.stream = stream;
+          this.state = "inactive";
+          this.mimeType = options.mimeType ? "audio/wav" : "audio/wav";
+        }
+
+        start(): void {
+          this.state = "recording";
+          if (typeof this.onstart === "function") {
+            this.onstart(new Event("start"));
+          }
+        }
+
+        stop(): void {
+          this.state = "inactive";
+          if (typeof this.ondataavailable === "function") {
+            this.ondataavailable({
+              data: new Blob([Uint8Array.from(atob(wavBytesBase64), (character) =>
+                character.charCodeAt(0),
+              )], {
+                type: "audio/wav",
+              }),
+            });
+          }
+          if (typeof this.onstop === "function") {
+            this.onstop(new Event("stop"));
+          }
         }
       }
-    }
 
-    Object.defineProperty(window.navigator, "mediaDevices", {
-      configurable: true,
-      value: {
-        getUserMedia: async () => new FakeMediaStream(),
-      },
-    });
+      Object.defineProperty(window.navigator, "mediaDevices", {
+        configurable: true,
+        value: {
+          getUserMedia: async () => new FakeMediaStream(),
+        },
+      });
 
-    Object.defineProperty(window, "MediaRecorder", {
-      configurable: true,
-      value: FakeMediaRecorder,
-    });
-  });
+      Object.defineProperty(window, "MediaRecorder", {
+        configurable: true,
+        value: FakeMediaRecorder,
+      });
+    },
+    {
+      wavBytesBase64: wavBytes.toString("base64"),
+    },
+  );
 }
 
 test.describe.configure({ timeout: LIVE_TEST_TIMEOUT_MS });
@@ -115,10 +166,11 @@ test("spoken input controls are visible, labeled, and keyboard-focusable", async
   await expect(uploadButton).toHaveCSS("outline-style", "solid");
 });
 
-test("stopping a recording auto-posts a queued spoken turn and keeps it separate", async ({
+test("stopping a recording auto-posts a queued spoken turn and exposes VAD metadata", async ({
   page,
 }) => {
-  await installMediaRecorderMock(page);
+  const recordedWav = buildWavBytes({ amplitude: 16_000, speechMs: 720 });
+  await installMediaRecorderMock(page, recordedWav);
   await page.goto("/");
 
   const recordButton = page.getByRole("button", { name: "Record turn" });
@@ -157,14 +209,18 @@ test("stopping a recording auto-posts a queued spoken turn and keeps it separate
 
   await expect(recordingStatus).toContainText("Queued");
   await expect(spokenTurns).toContainText(audioTurnRecord.job_id);
-  await expect(spokenTurns).toContainText("Queued");
+  await expect(spokenTurns).toContainText("Silero VAD");
+  await expect(spokenTurns).toContainText("Speech range");
+  await expect(spokenTurns).toContainText("Speech duration");
+  await expect(spokenTurns).toContainText("Confidence");
   await expect(recentAttempts).not.toContainText(audioTurnRecord.job_id);
   await expect(page.getByRole("button", { name: /transcribe/i })).toHaveCount(0);
 });
 
-test("uploading audio auto-posts a queued spoken turn and keeps it separate", async ({
+test("uploading audio exposes a weak-turn warning and keeps it separate", async ({
   page,
 }) => {
+  const thinWav = buildWavBytes({ amplitude: 900, speechMs: 160 });
   await page.goto("/");
 
   const uploadButton = page.getByRole("button", { name: "Upload audio" });
@@ -182,9 +238,9 @@ test("uploading audio auto-posts a queued spoken turn and keeps it separate", as
   );
 
   await page.locator('input[type="file"]').setInputFiles({
-    name: "spoken-turn.webm",
-    mimeType: "audio/webm",
-    buffer: SPOKEN_TURN_AUDIO,
+    name: "thin-turn.wav",
+    mimeType: "audio/wav",
+    buffer: thinWav,
   });
 
   const audioTurnResponse = await audioTurnResponsePromise;
@@ -199,6 +255,10 @@ test("uploading audio auto-posts a queued spoken turn and keeps it separate", as
 
   await expect(recordingStatus).toContainText("Queued");
   await expect(spokenTurns).toContainText(audioTurnRecord.job_id);
-  await expect(spokenTurns).toContainText("Queued");
+  await expect(spokenTurns).toContainText("Silero VAD");
+  await expect(spokenTurns).toContainText("thin or low-confidence");
+  await expect(spokenTurns).toContainText("Speech range");
+  await expect(spokenTurns).toContainText("Speech duration");
+  await expect(spokenTurns).toContainText("Confidence");
   await expect(recentAttempts).not.toContainText(audioTurnRecord.job_id);
 });
