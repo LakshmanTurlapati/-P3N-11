@@ -127,7 +127,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 03-03: STT provider baseline and transcript inspection
+- [x] 03-03: STT provider baseline and transcript inspection
 
 ### Phase 4: Live Conversation Mode
 
@@ -207,7 +207,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 |-------|----------------|--------|-----------|
 | 1. No-Login Vertical Skeleton | 3/3 | Complete    | 2026-07-01 |
 | 2. Consented Studio Generation | 6/6 | Complete    | 2026-07-03 |
-| 3. Audio Input and Turn Detection | 3/3 | Complete   | 2026-07-12 |
+| 3. Audio Input and Turn Detection | 3/3 | Complete    | 2026-07-12 |
 | 4. Live Conversation Mode | 0/3 | Not started | - |
 | 5. Model Benchmark and Selection | 0/3 | Not started | - |
 | 6. Cloud GPU Deployment and Internal Beta Hardening | 0/3 | Not started | - |
