@@ -96,7 +96,7 @@ Plans:
 
 ### Phase 3: Audio Input and Turn Detection
 
-**Goal**: User can provide spoken input, system can detect speech boundaries, transcribe the turn, and expose the transcript.
+**Goal**: As a studio user, I want to provide spoken input, inspect speech boundaries and an editable transcript, and explicitly copy the reviewed transcript into the generation composer, so that I can reuse spoken input without leaving the studio workflow.
 **Mode:** mvp
 **UI hint**: yes
 **Depends on**: Phase 2
