@@ -5,14 +5,14 @@ milestone_name: milestone
 current_phase: 04
 current_phase_name: Live Conversation Mode
 status: executing
-stopped_at: Completed 04-01-PLAN.md
-last_updated: "2026-07-13T03:33:02.968Z"
+stopped_at: Completed 04-02-PLAN.md
+last_updated: "2026-07-13T19:09:30.238Z"
 last_activity: 2026-07-13
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 15
-  completed_plans: 13
+  completed_plans: 14
   percent: 50
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-06-30)
 ## Current Position
 
 Phase: 04 (Live Conversation Mode) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-07-13
 
@@ -72,6 +72,7 @@ Progress: [█████░░░░░] 50%
 | Phase 03 P02 | 13m 11s | 3 tasks | 11 files |
 | Phase 03-audio-input-and-turn-detection P03 | 29 min | 3 tasks | 11 files |
 | Phase 04 P01 | ~1h 10m | 3 tasks | 11 files |
+| Phase 04 P02 | ~1h 45m | 3 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -127,6 +128,9 @@ Recent decisions affecting current work:
 - [Phase 03]: Persist transcript language and confidence on the same session-scoped audio-turn record that stores VAD metadata. — Keeps VAD and transcript review on the same auditable record.
 - [Phase 03]: Keep transcript review separate from the generation composer and require an explicit Use as generation text action to copy the transcript. — Prevents silent overwrites of the generation draft and matches the plan's no-overwrite handoff.
 - [Phase 4]: Keep live conversation inline on / instead of adding a separate route; use a server-owned SQLite session record as the authoritative conversation state and keep start/stop requests same-origin through Next.js rewrites. — This preserves the studio-first workflow and keeps the live panel maintainable as a sibling client component.
+- [Phase 04]: Keep v1 response generation deterministic and local so the provider contract, prompt boundary, and playback loop can be tested without a real LLM dependency. — This preserves the provider interface and avoids introducing a production LLM dependency before the benchmark phase.
+- [Phase 04]: Keep response prompt construction server-side so original-voice boundary and prohibited associations are enforced before response text exists. — The browser should receive only final response text and controlled playback metadata, not own persona boundary construction.
+- [Phase 04]: Use controlled same-origin /conversation-turns/{turn_id}/audio playback instead of exposing raw storage paths. — This matches existing generation playback boundaries and keeps audio storage replaceable behind API routes.
 
 ### Pending Todos
 
@@ -149,6 +153,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-13T03:31:05.371Z
-Stopped at: Completed 04-01-PLAN.md
+Last session: 2026-07-13T19:08:46.685Z
+Stopped at: Completed 04-02-PLAN.md
 Resume file: None
