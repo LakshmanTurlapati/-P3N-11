@@ -13,7 +13,10 @@ from services.api.app.services.conversation_jobs import (
     get_conversation_turn_service,
     stop_conversation_session,
 )
-from services.api.app.services.conversation_runtime import synthesizeConversationTurn
+from services.api.app.services.conversation_runtime import (
+    interruptConversationTurn,
+    synthesizeConversationTurn,
+)
 from services.api.app.services.rights_gate import ensure_voice_allowed
 from services.api.app.voice_registry.bundled_voice import VOICE_REGISTRY
 
@@ -199,6 +202,20 @@ def get_conversation_turn(turn_id: str) -> ConversationTurnRecord:
 
     try:
         return get_conversation_turn_service().get_turn(normalized_turn_id)
+    except KeyError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Conversation turn not found.",
+        ) from exc
+
+
+@router.post("/conversation-turns/{turn_id}/interrupt", response_model=ConversationTurnRecord)
+def interrupt_conversation_turn_route(turn_id: str) -> ConversationTurnRecord:
+    normalized_turn_id = _normalize_turn_id(turn_id)
+    service = get_conversation_turn_service()
+
+    try:
+        return interruptConversationTurn(normalized_turn_id, turn_service=service)
     except KeyError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

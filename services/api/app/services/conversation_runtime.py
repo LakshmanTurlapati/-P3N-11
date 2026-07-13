@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
 import os
 import sys
 from functools import lru_cache
@@ -154,6 +155,55 @@ def _artifact_duration_ms(artifact: Any) -> int:
     return 0
 
 
+def _turn_is_interrupted(turn_record: ConversationTurnRecord) -> bool:
+    return turn_record.status in {
+        ConversationTurnStatus.INTERRUPTED,
+        ConversationTurnStatus.CANCELED,
+    }
+
+
+def recordConversationLatency(
+    turn_record: ConversationTurnRecord,
+    *,
+    speech_end_to_transcript_ms: int | None = None,
+    response_text_ms: int | None = None,
+    tts_complete_ms: int | None = None,
+    playback_start_ms: int | None = None,
+) -> ConversationTurnRecord:
+    if speech_end_to_transcript_ms is not None:
+        turn_record.timing.speech_end_to_transcript_ms = speech_end_to_transcript_ms
+    if response_text_ms is not None:
+        turn_record.timing.response_text_ms = response_text_ms
+    if tts_complete_ms is not None:
+        turn_record.timing.tts_complete_ms = tts_complete_ms
+    if playback_start_ms is not None:
+        turn_record.timing.playback_start_ms = playback_start_ms
+
+    if turn_record.latency_ms is None:
+        latency_source = (
+            playback_start_ms
+            if playback_start_ms is not None
+            else turn_record.timing.playback_start_ms
+            if turn_record.timing.playback_start_ms is not None
+            else turn_record.timing.duration_ms
+        )
+        turn_record.latency_ms = latency_source
+
+    return turn_record
+
+
+def interruptConversationTurn(
+    turn_id: str,
+    *,
+    turn_service: Any | None = None,
+    reason: str | None = None,
+) -> ConversationTurnRecord:
+    from services.api.app.services.conversation_jobs import get_conversation_turn_service
+
+    conversation_turn_service = turn_service or get_conversation_turn_service()
+    return conversation_turn_service.mark_interrupted(turn_id, reason=reason)
+
+
 def synthesizeConversationTurn(
     turn_id: str,
     *,
@@ -168,11 +218,31 @@ def synthesizeConversationTurn(
 
     conversation_turn_service = turn_service or get_conversation_turn_service()
     voice_profile = voice_profile or VESPER_GLASS_PROFILE
-    running_record = conversation_turn_service.mark_running(turn_id)
+    existing_record = conversation_turn_service.get_turn(turn_id)
+    if _turn_is_interrupted(existing_record):
+        return existing_record
+
+    def _current_record_if_interrupted() -> ConversationTurnRecord | None:
+        current_record = conversation_turn_service.get_turn(turn_id)
+        if _turn_is_interrupted(current_record):
+            return current_record
+        return None
+
+    try:
+        running_record = conversation_turn_service.mark_running(turn_id)
+    except ValueError:
+        interrupted_record = _current_record_if_interrupted()
+        if interrupted_record is not None:
+            return interrupted_record
+        raise
     session_id = conversation_turn_service.get_turn_session_id(turn_id)
+    turn_started_at = running_record.timing.started_at
 
     try:
         audio_bytes = conversation_turn_service.get_input_audio_path(turn_id).read_bytes()
+        interrupted_record = _current_record_if_interrupted()
+        if interrupted_record is not None:
+            return interrupted_record
         audio_buffer = _audio_buffer_for_turn(
             audio_bytes,
             running_record.attempt.mime_type or "audio/wav",
@@ -181,6 +251,10 @@ def synthesizeConversationTurn(
         speech_segments = vad_provider.detect_speech_segments(audio_buffer)
         if not speech_segments:
             raise RuntimeError("No meaningful speech was detected in the conversation turn.")
+
+        interrupted_record = _current_record_if_interrupted()
+        if interrupted_record is not None:
+            return interrupted_record
 
         vad_metadata = _summarize_segments(
             speech_segments,
@@ -197,6 +271,11 @@ def synthesizeConversationTurn(
         if not transcript_text:
             raise RuntimeError("The STT provider returned an empty transcript for the conversation turn.")
 
+        transcript_completed_at = datetime.now(UTC)
+        interrupted_record = _current_record_if_interrupted()
+        if interrupted_record is not None:
+            return interrupted_record
+
         session_turns = conversation_turn_service.session_service.list_turns(session_id)
         recent_turns = [
             turn
@@ -210,12 +289,20 @@ def synthesizeConversationTurn(
             recent_turns=recent_turns,
         )
         response = generateConversationReply(prompt, provider=response_provider)
+        response_completed_at = datetime.now(UTC)
+        interrupted_record = _current_record_if_interrupted()
+        if interrupted_record is not None:
+            return interrupted_record
         tts_provider = tts_provider or get_generation_tts_provider()
         artifact = tts_provider.synthesize(
             response.text,
             voice_profile.id,
             tone=response.tone_preset.value,
         )
+        tts_completed_at = datetime.now(UTC)
+        interrupted_record = _current_record_if_interrupted()
+        if interrupted_record is not None:
+            return interrupted_record
         response_audio_bytes = getattr(artifact, "audio_bytes")
         mime_type = getattr(artifact, "mime_type", None) or "audio/wav"
         provider_name = getattr(artifact, "provider_name", None) or getattr(
@@ -233,6 +320,13 @@ def synthesizeConversationTurn(
             mime_type=mime_type,
             audio_duration_ms=_artifact_duration_ms(artifact),
             tone_preset=response.tone_preset,
+            speech_end_to_transcript_ms=int((transcript_completed_at - turn_started_at).total_seconds() * 1000),
+            response_text_ms=int((response_completed_at - turn_started_at).total_seconds() * 1000),
+            tts_complete_ms=int((tts_completed_at - turn_started_at).total_seconds() * 1000),
+            playback_start_ms=int((datetime.now(UTC) - turn_started_at).total_seconds() * 1000),
         )
     except Exception as exc:
+        interrupted_record = _current_record_if_interrupted()
+        if interrupted_record is not None:
+            return interrupted_record
         return conversation_turn_service.mark_failed(turn_id, error_message=str(exc))

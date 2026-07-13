@@ -96,11 +96,41 @@ class ConversationTurnTiming(BaseModel):
     started_at: datetime
     ended_at: datetime
     duration_ms: int = Field(ge=0)
+    speech_end_to_transcript_ms: int | None = Field(default=None, ge=0)
+    response_text_ms: int | None = Field(default=None, ge=0)
+    tts_complete_ms: int | None = Field(default=None, ge=0)
+    playback_start_ms: int | None = Field(default=None, ge=0)
 
     @model_validator(mode="after")
     def _require_end_after_start(self) -> "ConversationTurnTiming":
         if self.ended_at < self.started_at:
             raise ValueError("ended_at must be greater than or equal to started_at")
+        return self
+
+
+class ConversationTurnCancelState(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    requested_at: datetime = Field(default_factory=_now)
+    interrupted_at: datetime | None = None
+    canceled_at: datetime | None = None
+    reason: str | None = None
+
+    @field_validator("reason")
+    @classmethod
+    def _normalize_reason(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+
+        cleaned_value = value.strip()
+        if not cleaned_value:
+            return None
+        return cleaned_value
+
+    @model_validator(mode="after")
+    def _require_completion_timestamp(self) -> "ConversationTurnCancelState":
+        if self.interrupted_at is None and self.canceled_at is None:
+            raise ValueError("cancel state must include interrupted_at or canceled_at")
         return self
 
 
@@ -115,6 +145,7 @@ class ConversationTurnRecord(BaseModel):
     playback_url: str | None = None
     tone_preset: GenerationTonePreset | None = None
     latency_ms: int | None = Field(default=None, ge=0)
+    cancel_state: ConversationTurnCancelState | None = None
     attempt: ConversationTurnAttempt | None = None
     timing: ConversationTurnTiming = Field(default_factory=_default_turn_timing)
 
@@ -141,7 +172,16 @@ class ConversationTurnRecord(BaseModel):
         return value
 
     @model_validator(mode="after")
-    def _require_succeeded_turn_fields(self) -> "ConversationTurnRecord":
+    def _require_state_consistency(self) -> "ConversationTurnRecord":
+        if self.attempt is not None and self.attempt.status != self.status:
+            raise ValueError("attempt status must match the conversation turn status")
+
+        if self.status in {
+            ConversationTurnStatus.INTERRUPTED,
+            ConversationTurnStatus.CANCELED,
+        } and self.cancel_state is None:
+            raise ValueError("interrupted conversation turns must include cancel state metadata")
+
         if self.status == ConversationTurnStatus.SUCCEEDED:
             if self.attempt is None:
                 raise ValueError("succeeded conversation turns must include an attempt record")

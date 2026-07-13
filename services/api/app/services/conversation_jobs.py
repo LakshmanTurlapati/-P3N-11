@@ -9,6 +9,7 @@ from uuid import uuid4
 
 from services.api.app.schemas.conversation import (
     ConversationTurnAttempt,
+    ConversationTurnCancelState,
     ConversationSessionRecord,
     ConversationSessionStatus,
     ConversationTurnRecord,
@@ -17,6 +18,7 @@ from services.api.app.schemas.conversation import (
     ConversationTurnTiming,
 )
 from services.api.app.schemas.generation import GenerationTonePreset
+from services.api.app.services.conversation_runtime import recordConversationLatency
 
 
 def _now() -> datetime:
@@ -377,6 +379,71 @@ class ConversationTurnService:
         record.timing.duration_ms = elapsed_ms
         return self._save_record(session_id, record)
 
+    def mark_interrupted(
+        self,
+        turn_id: str,
+        *,
+        reason: str | None = None,
+    ) -> ConversationTurnRecord:
+        session_id, record = self._load_record(turn_id)
+        if record.status in {
+            ConversationTurnStatus.INTERRUPTED,
+            ConversationTurnStatus.CANCELED,
+        }:
+            return record
+
+        if record.status == ConversationTurnStatus.FAILED:
+            return record
+
+        was_succeeded = record.status == ConversationTurnStatus.SUCCEEDED
+        now = _now()
+        elapsed_ms = _milliseconds(now - record.timing.started_at)
+        record.status = ConversationTurnStatus.INTERRUPTED
+        record.cancel_state = ConversationTurnCancelState(
+            requested_at=now,
+            interrupted_at=now,
+            reason=reason or "manual interrupt",
+        )
+
+        if record.attempt is not None:
+            record.attempt.status = ConversationTurnStatus.INTERRUPTED
+            if not was_succeeded:
+                record.attempt.ended_at = now
+                record.attempt.duration_ms = elapsed_ms
+            if record.attempt.error_message is None and not was_succeeded:
+                record.attempt.error_message = "Conversation turn interrupted."
+
+        if not was_succeeded:
+            record.timing.ended_at = now
+            record.timing.duration_ms = elapsed_ms
+            record = recordConversationLatency(
+                record,
+                speech_end_to_transcript_ms=(
+                    record.timing.speech_end_to_transcript_ms
+                    if record.timing.speech_end_to_transcript_ms is not None
+                    else elapsed_ms
+                ),
+                response_text_ms=(
+                    record.timing.response_text_ms
+                    if record.timing.response_text_ms is not None
+                    else elapsed_ms
+                ),
+                tts_complete_ms=(
+                    record.timing.tts_complete_ms
+                    if record.timing.tts_complete_ms is not None
+                    else elapsed_ms
+                ),
+                playback_start_ms=(
+                    record.timing.playback_start_ms
+                    if record.timing.playback_start_ms is not None
+                    else elapsed_ms
+                ),
+            )
+        else:
+            record = recordConversationLatency(record)
+
+        return self._save_record(session_id, record)
+
     def mark_succeeded(
         self,
         turn_id: str,
@@ -389,8 +456,18 @@ class ConversationTurnService:
         mime_type: str,
         audio_duration_ms: int,
         tone_preset: GenerationTonePreset | None = None,
+        speech_end_to_transcript_ms: int | None = None,
+        response_text_ms: int | None = None,
+        tts_complete_ms: int | None = None,
+        playback_start_ms: int | None = None,
     ) -> ConversationTurnRecord:
         session_id, record = self._load_record(turn_id)
+        if record.status in {
+            ConversationTurnStatus.INTERRUPTED,
+            ConversationTurnStatus.CANCELED,
+        }:
+            return record
+
         if record.status not in {ConversationTurnStatus.QUEUED, ConversationTurnStatus.RUNNING}:
             raise ValueError("Only queued or running turns can transition to succeeded")
 
@@ -419,10 +496,23 @@ class ConversationTurnService:
             record.attempt.duration_ms = elapsed_ms
         record.timing.ended_at = now
         record.timing.duration_ms = elapsed_ms
+        record = recordConversationLatency(
+            record,
+            speech_end_to_transcript_ms=speech_end_to_transcript_ms,
+            response_text_ms=response_text_ms,
+            tts_complete_ms=tts_complete_ms,
+            playback_start_ms=playback_start_ms,
+        )
         return self._save_record(session_id, record)
 
     def mark_failed(self, turn_id: str, *, error_message: str) -> ConversationTurnRecord:
         session_id, record = self._load_record(turn_id)
+        if record.status in {
+            ConversationTurnStatus.INTERRUPTED,
+            ConversationTurnStatus.CANCELED,
+        }:
+            return record
+
         if record.status == ConversationTurnStatus.SUCCEEDED:
             raise ValueError("Succeeded turns cannot transition to failed")
 
