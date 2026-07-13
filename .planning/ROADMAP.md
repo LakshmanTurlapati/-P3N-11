@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: No-Login Vertical Skeleton** - Prove the web/API/audio path and consent-safe voice registry. (completed 2026-07-01)
 - [x] **Phase 2: Consented Studio Generation** - Generate playable speech from text with one real provider and tone presets. (completed 2026-07-02)
 - [x] **Phase 3: Audio Input and Turn Detection** - Add mic/audio input, VAD, STT, and transcript inspection. (completed 2026-07-12)
-- [ ] **Phase 4: Live Conversation Mode** - Combine speech input, persona response, TTS output, and interruption handling.
+- [x] **Phase 4: Live Conversation Mode** - Combine speech input, persona response, TTS output, and interruption handling. (completed 2026-07-13)
 - [ ] **Phase 5: Model Benchmark and Selection** - Compare VAD, TTS, and end-to-end speech candidates with repeatable metrics.
 - [ ] **Phase 6: Cloud GPU Deployment and Internal Beta Hardening** - Make the app deployable and debuggable on rented GPU infrastructure.
 
@@ -144,13 +144,13 @@ Plans:
   4. User can interrupt or cancel a response and continue the conversation.
   5. System records end-to-end latency for conversation turns.
 
-**Plans**: 2/3 plans executed
+**Plans**: 3/3 plans complete
 
 Plans:
 
 - [x] 04-01-PLAN.md
 - [x] 04-02-PLAN.md
-- [ ] 04-03-PLAN.md
+- [x] 04-03-PLAN.md
 
 **Wave 1**
 
@@ -158,7 +158,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 04-02: Persona-safe LLM response and speech output loop
+- [x] 04-02: Persona-safe LLM response and speech output loop
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -220,6 +220,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 1. No-Login Vertical Skeleton | 3/3 | Complete    | 2026-07-01 |
 | 2. Consented Studio Generation | 6/6 | Complete    | 2026-07-03 |
 | 3. Audio Input and Turn Detection | 3/3 | Complete    | 2026-07-12 |
-| 4. Live Conversation Mode | 2/3 | In Progress|  |
+| 4. Live Conversation Mode | 3/3 | Complete   | 2026-07-13 |
 | 5. Model Benchmark and Selection | 0/3 | Not started | - |
 | 6. Cloud GPU Deployment and Internal Beta Hardening | 0/3 | Not started | - |

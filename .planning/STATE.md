@@ -4,16 +4,16 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 04
 current_phase_name: Live Conversation Mode
-status: executing
-stopped_at: Completed 04-02-PLAN.md
-last_updated: "2026-07-13T19:09:30.238Z"
+status: verifying
+stopped_at: Completed 04-03-PLAN.md
+last_updated: "2026-07-13T20:18:26.537Z"
 last_activity: 2026-07-13
 progress:
   total_phases: 6
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 15
-  completed_plans: 14
-  percent: 50
+  completed_plans: 15
+  percent: 67
 ---
 
 # Project State
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-06-30)
 
 Phase: 04 (Live Conversation Mode) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-07-13
 
 Progress: [█████░░░░░] 50%
@@ -73,6 +73,7 @@ Progress: [█████░░░░░] 50%
 | Phase 03-audio-input-and-turn-detection P03 | 29 min | 3 tasks | 11 files |
 | Phase 04 P01 | ~1h 10m | 3 tasks | 11 files |
 | Phase 04 P02 | ~1h 45m | 3 tasks | 12 files |
+| Phase 04 P03 | 1h 3m | 3 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -131,6 +132,9 @@ Recent decisions affecting current work:
 - [Phase 04]: Keep v1 response generation deterministic and local so the provider contract, prompt boundary, and playback loop can be tested without a real LLM dependency. — This preserves the provider interface and avoids introducing a production LLM dependency before the benchmark phase.
 - [Phase 04]: Keep response prompt construction server-side so original-voice boundary and prohibited associations are enforced before response text exists. — The browser should receive only final response text and controlled playback metadata, not own persona boundary construction.
 - [Phase 04]: Use controlled same-origin /conversation-turns/{turn_id}/audio playback instead of exposing raw storage paths. — This matches existing generation playback boundaries and keeps audio storage replaceable behind API routes.
+- [Phase 04]: Keep interrupt cooperative: the browser pauses playback immediately, then POSTs the active turn to the server so late completions cannot resurrect canceled work. — This gives the user immediate recovery while preserving server-owned cancel state for auditability and late-write guards.
+- [Phase 04]: Show live-turn latency as a compact seconds chip instead of a timing table. — The studio surface should stay readable while detailed stage timings remain available in backend records and tests.
+- [Phase 04]: Render Interrupt as a first-class live-panel control and keep barge-in as best-effort fallback behavior. — Explicit user control must work even when VAD-based barge-in is unreliable.
 
 ### Pending Todos
 
@@ -153,6 +157,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-13T19:08:46.685Z
-Stopped at: Completed 04-02-PLAN.md
+Last session: 2026-07-13T20:18:02.967Z
+Stopped at: Completed 04-03-PLAN.md
 Resume file: None
