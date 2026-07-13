@@ -332,6 +332,23 @@ button {
     linear-gradient(180deg, rgba(31, 24, 21, 0.92), rgba(18, 13, 11, 0.94));
 }
 
+.conversation-panel {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: 24px;
+  border: 1px solid rgba(214, 160, 106, 0.18);
+  background:
+    linear-gradient(180deg, rgba(31, 24, 21, 0.92), rgba(18, 13, 11, 0.94));
+}
+
+.conversation-panel__status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
 .field-group--wide {
   width: 100%;
 }

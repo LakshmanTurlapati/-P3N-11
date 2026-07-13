@@ -14,6 +14,14 @@ const nextConfig: NextConfig = {
         destination: `${apiBaseUrl}/generations/:path*`,
       },
       {
+        source: "/conversation-sessions",
+        destination: `${apiBaseUrl}/conversation-sessions`,
+      },
+      {
+        source: "/conversation-sessions/:path*",
+        destination: `${apiBaseUrl}/conversation-sessions/:path*`,
+      },
+      {
         source: "/voices/:path*",
         destination: `${apiBaseUrl}/voices/:path*`,
       },

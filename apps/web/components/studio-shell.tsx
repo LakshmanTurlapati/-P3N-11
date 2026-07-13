@@ -8,6 +8,10 @@ import {
   useState,
 } from "react";
 
+import {
+  ConversationSessionPanel,
+  type ConversationSessionRecord,
+} from "./conversation-panel";
 import { voiceDisplaySeeds } from "@/lib/voice-registry";
 
 type GenerationTonePreset = "measured" | "cutting" | "grandiose";
@@ -643,6 +647,11 @@ export function StudioShell() {
     null,
   );
   const [spokenTurns, setSpokenTurns] = useState<AudioTurnJobRecord[]>([]);
+  const [conversationSession, setConversationSession] =
+    useState<ConversationSessionRecord | null>(null);
+  const [conversationError, setConversationError] = useState<string | null>(null);
+  const [isStartingConversation, setIsStartingConversation] = useState(false);
+  const [isStoppingConversation, setIsStoppingConversation] = useState(false);
   const [transcriptDrafts, setTranscriptDrafts] = useState<Record<string, string>>({});
   const [captureMessage, setCaptureMessage] = useState("Ready to record");
   const [captureError, setCaptureError] = useState<string | null>(null);
@@ -678,6 +687,17 @@ export function StudioShell() {
 
   const recordingStatusText = captureError ?? captureMessage;
   const recordingTimerText = formatRecordingTimer(recordingElapsedMs);
+  const conversationStatusText = conversationError
+    ? conversationError
+    : isStartingConversation
+      ? "Starting..."
+      : isStoppingConversation
+        ? "Stopping..."
+        : conversationSession?.status === "listening"
+          ? "Listening"
+          : conversationSession?.status === "stopped"
+            ? "Stopped"
+            : "Ready to start";
 
   async function submitGeneration(submission: GenerationSubmission) {
     setIsSubmitting(true);
@@ -766,6 +786,85 @@ export function StudioShell() {
       setCaptureMessage(message);
       setCaptureError(message);
       throw error;
+    }
+  }
+
+  async function startConversationSession() {
+    if (isStartingConversation || conversationSession?.status === "listening") {
+      return;
+    }
+
+    setConversationError(null);
+    setIsStartingConversation(true);
+
+    try {
+      const response = await fetch("/conversation-sessions", {
+        method: "POST",
+      });
+      const payload = (await response.json()) as
+        | ConversationSessionRecord
+        | GenerationResponseError;
+      const responseError = payload as GenerationResponseError;
+
+      if (!response.ok) {
+        throw new Error(
+          typeof responseError.detail === "string"
+            ? responseError.detail
+            : "Conversation session request failed.",
+        );
+      }
+
+      setConversationSession(payload as ConversationSessionRecord);
+      setConversationError(null);
+    } catch (error) {
+      setConversationError(
+        error instanceof Error ? error.message : "Conversation session request failed.",
+      );
+    } finally {
+      setIsStartingConversation(false);
+    }
+  }
+
+  async function stopConversationSession() {
+    if (
+      isStoppingConversation ||
+      !conversationSession ||
+      conversationSession.status !== "listening"
+    ) {
+      return;
+    }
+
+    setConversationError(null);
+    setIsStoppingConversation(true);
+
+    try {
+      const response = await fetch(
+        `/conversation-sessions/${conversationSession.session_id}/stop`,
+        {
+          method: "POST",
+        },
+      );
+      const payload = (await response.json()) as
+        | ConversationSessionRecord
+        | GenerationResponseError;
+      const responseError = payload as GenerationResponseError;
+
+      if (!response.ok) {
+        throw new Error(
+          typeof responseError.detail === "string"
+            ? responseError.detail
+            : "Conversation stop request failed.",
+        );
+      }
+
+      setConversationSession(payload as ConversationSessionRecord);
+      setConversationError(null);
+    } catch (error) {
+      setConversationError(
+        error instanceof Error ? error.message : "Conversation stop request failed.",
+      );
+    } finally {
+      setIsStoppingConversation(false);
     }
   }
 
@@ -1307,6 +1406,20 @@ export function StudioShell() {
                   </button>
                 </div>
               </form>
+
+              <ConversationSessionPanel
+                session={conversationSession}
+                statusText={conversationStatusText}
+                errorMessage={conversationError}
+                isStarting={isStartingConversation}
+                isStopping={isStoppingConversation}
+                onStartConversation={() => {
+                  void startConversationSession();
+                }}
+                onStopConversation={() => {
+                  void stopConversationSession();
+                }}
+              />
             </div>
 
             {generationError ? (
