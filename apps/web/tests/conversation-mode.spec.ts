@@ -4,6 +4,7 @@ const LIVE_TEST_TIMEOUT_MS = 120_000;
 const CONVERSATION_SESSION_ID = "conversation-session-001";
 const CONVERSATION_TURN_ID = "conversation-turn-001";
 const CONVERSATION_TURN_AUDIO_URL = `/conversation-turns/${CONVERSATION_TURN_ID}/audio`;
+const CONVERSATION_TURN_LATENCY_CHIP_TEXT = "1.24 s";
 const RESPONSE_TEXT =
   "Well. That was almost interesting. Almost.";
 
@@ -24,12 +25,25 @@ type ConversationTurnRecord = {
   user_transcript_text: string | null;
   response_text: string | null;
   playback_url: string | null;
+  tone_preset: ConversationTonePreset | null;
   latency_ms: number | null;
+  cancel_state: ConversationTurnCancelState | null;
   timing: {
     started_at: string;
     ended_at: string;
     duration_ms: number;
+    speech_end_to_transcript_ms: number | null;
+    response_text_ms: number | null;
+    tts_complete_ms: number | null;
+    playback_start_ms: number | null;
   };
+};
+
+type ConversationTurnCancelState = {
+  requested_at: string;
+  interrupted_at: string | null;
+  canceled_at: string | null;
+  reason: string | null;
 };
 
 function buildConversationSessionRecord(
@@ -60,11 +74,25 @@ function buildConversationTurnRecord(
       status === "succeeded" ? "The line is ready." : "Pending transcript.",
     response_text: status === "succeeded" ? RESPONSE_TEXT : null,
     playback_url: status === "succeeded" ? CONVERSATION_TURN_AUDIO_URL : null,
+    tone_preset: status === "succeeded" ? "cutting" : null,
     latency_ms: status === "succeeded" ? 1240 : null,
+    cancel_state:
+      status === "interrupted" || status === "canceled"
+        ? {
+            requested_at: "2026-07-12T03:00:02.050Z",
+            interrupted_at: status === "interrupted" ? "2026-07-12T03:00:02.120Z" : null,
+            canceled_at: status === "canceled" ? "2026-07-12T03:00:02.120Z" : null,
+            reason: "manual interrupt",
+          }
+        : null,
     timing: {
       started_at: "2026-07-12T03:00:01.000Z",
       ended_at: "2026-07-12T03:00:02.240Z",
       duration_ms: status === "succeeded" ? 1240 : 0,
+      speech_end_to_transcript_ms: status === "succeeded" ? 180 : null,
+      response_text_ms: status === "succeeded" ? 420 : null,
+      tts_complete_ms: status === "succeeded" ? 940 : null,
+      playback_start_ms: status === "succeeded" ? 1240 : null,
     },
   };
 
@@ -72,6 +100,18 @@ function buildConversationTurnRecord(
     ...baseRecord,
     ...overrides,
   };
+}
+
+async function installAudioPauseSpy(page: Page) {
+  await page.addInitScript(() => {
+    const originalPause = HTMLMediaElement.prototype.pause;
+    (window as Window & { __pauseCalls?: number }).__pauseCalls = 0;
+    HTMLMediaElement.prototype.pause = function pause(this: HTMLMediaElement) {
+      const globalWindow = window as Window & { __pauseCalls?: number };
+      globalWindow.__pauseCalls = (globalWindow.__pauseCalls ?? 0) + 1;
+      return originalPause.call(this);
+    };
+  });
 }
 
 function buildWavBytes({
@@ -408,8 +448,110 @@ test("response playback shows up in the live conversation turn card", async ({
   await expect(page.getByRole("list", { name: "Conversation turns" })).toContainText(
     RESPONSE_TEXT,
   );
+  await expect(
+    page.getByLabel(`Conversation turn ${CONVERSATION_TURN_ID} latency chip`),
+  ).toHaveText(CONVERSATION_TURN_LATENCY_CHIP_TEXT);
   await expect(page.getByLabel(`Conversation turn ${CONVERSATION_TURN_ID} playback`)).toHaveAttribute(
     "src",
     new RegExp(`${CONVERSATION_TURN_AUDIO_URL}$`),
+  );
+});
+
+test("interrupt control pauses playback and returns the panel to listening", async ({
+  page,
+}) => {
+  await installAudioPauseSpy(page);
+
+  let sessionRecord = buildConversationSessionRecord("listening", [
+    buildConversationTurnRecord("succeeded"),
+  ]);
+  const interruptRequests: Array<{
+    url: string;
+    method: string;
+    body: string | null;
+  }> = [];
+
+  await page.route("**/conversation-sessions", async (route) => {
+    if (route.request().method() !== "POST") {
+      await route.fallback();
+      return;
+    }
+
+    await route.fulfill({
+      contentType: "application/json",
+      json: sessionRecord,
+    });
+  });
+
+  await page.route(`**/conversation-sessions/${CONVERSATION_SESSION_ID}`, async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      json: sessionRecord,
+    });
+  });
+
+  await page.route(
+    `**/conversation-turns/${CONVERSATION_TURN_ID}/interrupt`,
+    async (route) => {
+      interruptRequests.push({
+        url: route.request().url(),
+        method: route.request().method(),
+        body: route.request().postData(),
+      });
+
+      sessionRecord = buildConversationSessionRecord("listening", [
+        buildConversationTurnRecord("interrupted"),
+      ]);
+
+      await route.fulfill({
+        contentType: "application/json",
+        json: buildConversationTurnRecord("interrupted"),
+      });
+    },
+  );
+
+  await page.route(
+    `**/conversation-turns/${CONVERSATION_TURN_ID}`,
+    async (route) => {
+      await route.fulfill({
+        contentType: "application/json",
+        json: buildConversationTurnRecord("interrupted"),
+      });
+    },
+  );
+
+  await page.route(
+    `**/conversation-turns/${CONVERSATION_TURN_ID}/audio`,
+    async (route) => {
+      await route.fulfill({
+        contentType: "audio/wav",
+        body: buildWavBytes(),
+      });
+    },
+  );
+
+  await page.goto("/");
+
+  await expect(page.getByRole("button", { name: "Start conversation" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Interrupt" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Interrupt" }).click();
+
+  await expect.poll(async () =>
+    page.evaluate(() => (window as Window & { __pauseCalls?: number }).__pauseCalls ?? 0),
+  ).toBeGreaterThan(0);
+
+  expect(interruptRequests).toHaveLength(1);
+  expect(interruptRequests[0]).toMatchObject({
+    url: "http://127.0.0.1:3000/conversation-turns/conversation-turn-001/interrupt",
+    method: "POST",
+    body: null,
+  });
+
+  await expect(page.getByRole("status", { name: "Live conversation status" })).toContainText(
+    "Listening",
+  );
+  await expect(page.getByRole("list", { name: "Conversation turns" })).toContainText(
+    /Interrupted|Canceled/,
   );
 });
