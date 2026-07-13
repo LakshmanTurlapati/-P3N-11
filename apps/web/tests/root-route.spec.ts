@@ -9,6 +9,10 @@ test("root route opens the studio directly", async ({ page }) => {
   await expect(page.getByRole("status", { name: "Voice rights status" })).toContainText(
     "Approved for generation",
   );
+  await expect(page.getByRole("heading", { name: "Live conversation" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Start conversation" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Stop conversation" })).toBeVisible();
+  await expect(page.getByRole("list", { name: "Conversation turns" })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Generation text" })).toBeVisible();
   await expect(page.getByRole("group", { name: "Tone preset" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Generate voice" })).toBeVisible();
@@ -19,6 +23,5 @@ test("root route opens the studio directly", async ({ page }) => {
 
   await expect(page.getByRole("button", { name: /retry/i })).toHaveCount(0);
   await expect(page.getByRole("button", { name: /transcribe/i })).toHaveCount(0);
-  await expect(page.getByLabel(/live conversation/i)).toHaveCount(0);
   await expect(page.getByRole("button", { name: /playback/i })).toHaveCount(0);
 });
