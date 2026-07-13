@@ -167,7 +167,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 04-04: Gap closure for VAD barge-in and failed-turn recovery
+- [x] 04-04: Gap closure for VAD barge-in and failed-turn recovery
 
 ### Phase 5: Model Benchmark and Selection
 
@@ -225,6 +225,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 1. No-Login Vertical Skeleton | 3/3 | Complete    | 2026-07-01 |
 | 2. Consented Studio Generation | 6/6 | Complete    | 2026-07-03 |
 | 3. Audio Input and Turn Detection | 3/3 | Complete    | 2026-07-12 |
-| 4. Live Conversation Mode | 4/4 | Complete   | 2026-07-13 |
+| 4. Live Conversation Mode | 4/4 | Complete    | 2026-07-13 |
 | 5. Model Benchmark and Selection | 0/3 | Not started | - |
 | 6. Cloud GPU Deployment and Internal Beta Hardening | 0/3 | Not started | - |
