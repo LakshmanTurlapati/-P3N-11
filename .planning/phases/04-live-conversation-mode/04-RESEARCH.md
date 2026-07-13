@@ -334,22 +334,19 @@ return FileResponse(
 
 All claims in this research were verified from the current codebase, official docs, registry checks, or explicit phase/context decisions. No additional user confirmation is needed for the planning baseline.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **What is the minimal live transport for Phase 4?**
-   - What we know: The phase is explicitly turn-based and defers final WebRTC/LiveKit selection [CITED: /Users/akhilasusarla/conductor/workspaces/p3n-11/calgary/.planning/phases/04-live-conversation-mode/04-CONTEXT.md].
-   - What's unclear: Whether the first slice should rely on chunked HTTP posts, polling, or a WebSocket bridge for live turn exchange.
-   - Recommendation: Keep the API contract transport-agnostic and choose the simplest mechanism that satisfies interruption and latency measurement.
+   - Resolved answer: Use turn-based same-origin HTTP through the existing conversation routes and Next.js rewrites for Phase 4.
+   - Why this is the chosen answer: The phase stays transport-agnostic at the contract level, but the implemented slice needs the simplest end-to-end path that proves turn exchange, interruption, and latency measurement on `/`.
 
 2. **How much cancellation must be hard versus cooperative?**
-   - What we know: The browser can stop playback immediately, and the backend can mark a turn canceled or interrupted.
-   - What's unclear: Whether the first slice needs a runtime that can truly abort synthesis mid-call.
-   - Recommendation: Require cooperative cancellation in the turn state machine and treat provider abort as best-effort.
+   - Resolved answer: Use cooperative cancellation with immediate browser playback stop, pending-request abort where possible, and backend interrupted/canceled turn states.
+   - Why this is the chosen answer: The browser can stop audio immediately, but the backend must keep the authoritative state machine consistent without assuming hard-kill synthesis.
 
 3. **How much short-term memory should the default responder keep?**
-   - What we know: The phase allows short session memory but forbids persistent memory after refresh.
-   - What's unclear: Exact window size and schema for recent-turn context.
-   - Recommendation: Keep it small and explicit so the response provider remains deterministic and testable.
+   - Resolved answer: Keep short session memory scoped to the current browser session and refresh boundary only.
+   - Why this is the chosen answer: The phase allows short-term coherence but forbids persistent memory after refresh, so the default responder should stay small, explicit, and reset on reload.
 
 ## Environment Availability
 
