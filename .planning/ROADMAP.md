@@ -131,7 +131,7 @@ Plans:
 
 ### Phase 4: Live Conversation Mode
 
-**Goal**: User can speak to the voicebot and receive a spoken response in the selected original voice and tone, with interruption support.
+**Goal**: As a studio user, I want to speak to the live voicebot and receive spoken responses in the selected original voice and tone with interruption support, so that I can hold a recoverable, measurable conversation without leaving the studio.
 **Mode:** mvp
 **UI hint**: yes
 **Depends on**: Phase 3
