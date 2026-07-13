@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 04
-current_phase_name: Live Conversation Mode
+current_phase: 05
+current_phase_name: model-benchmark-and-selection
 status: ready_to_execute
-stopped_at: Phase 04 gap closure plan ready
-last_updated: "2026-07-13T21:19:13.084Z"
+stopped_at: Completed 04-04-PLAN.md
+last_updated: "2026-07-13T21:43:30.358Z"
 last_activity: 2026-07-13
-last_activity_desc: Phase 04 planning complete
+last_activity_desc: Phase 04 execution complete
 progress:
   total_phases: 6
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 16
-  completed_plans: 15
-  percent: 50
+  completed_plans: 16
+  percent: 67
 ---
 
 # Project State
@@ -24,16 +24,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-30)
 
 **Core value:** Users can speak or write an input and receive a high-quality spoken response in a controllable, consented character voice with low enough latency to feel conversational.
-**Current focus:** Phase 04 — Live Conversation Mode
+**Current focus:** Phase 05 — model-benchmark-and-selection
 
 ## Current Position
 
-Phase: 04 (Live Conversation Mode) — READY TO EXECUTE GAP CLOSURE
-Plan: 4 of 4
-Status: Gap closure planned — execute 04-04 next
-Last activity: 2026-07-13 — Phase 04 planning complete
+Phase: 05 (model-benchmark-and-selection) — READY TO EXECUTE
+Plan: 1 of 3
+Status: Ready to execute Phase 05
+Last activity: 2026-07-13 — Phase 04 execution complete
 
-Progress: [█████░░░░░] 50%
+Progress: [███████░░░] 67%
 
 ## Performance Metrics
 
@@ -50,7 +50,7 @@ Progress: [█████░░░░░] 50%
 | 1. No-Login Vertical Skeleton | 3 | 3 | 15 min |
 | 2. Consented Studio Generation | 6 | 6 | 40 min |
 | 3. Audio Input and Turn Detection | 3 | 3 | 20 min |
-| 4. Live Conversation Mode | 3 | 4 | ~1h 19m |
+| 4. Live Conversation Mode | 4 | 4 | ~1h 04m |
 | 5. Model Benchmark and Selection | 0 | 3 | - |
 | 6. Cloud GPU Deployment and Internal Beta Hardening | 0 | 3 | - |
 
@@ -75,6 +75,7 @@ Progress: [█████░░░░░] 50%
 | Phase 04 P01 | ~1h 10m | 3 tasks | 11 files |
 | Phase 04 P02 | ~1h 45m | 3 tasks | 12 files |
 | Phase 04 P03 | 1h 3m | 3 tasks | 13 files |
+| Phase 04 P04 | 16m | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -136,6 +137,8 @@ Recent decisions affecting current work:
 - [Phase 04]: Keep interrupt cooperative: the browser pauses playback immediately, then POSTs the active turn to the server so late completions cannot resurrect canceled work. — This gives the user immediate recovery while preserving server-owned cancel state for auditability and late-write guards.
 - [Phase 04]: Show live-turn latency as a compact seconds chip instead of a timing table. — The studio surface should stay readable while detailed stage timings remain available in backend records and tests.
 - [Phase 04]: Render Interrupt as a first-class live-panel control and keep barge-in as best-effort fallback behavior. — Explicit user control must work even when VAD-based barge-in is unreliable.
+- [Phase 04]: Keep barge-in best-effort on the browser side and reuse the existing interrupt route. — Adds speech-triggered interruption without a new cancellation path.
+- [Phase 04]: Leave the backend turn-scoping logic unchanged because the forced failure regression showed the existing session recovery path already works. — Confirms the session boundary was already correct and only needed regression coverage.
 
 ### Pending Todos
 
@@ -158,6 +161,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-13T21:19:13.084Z
-Stopped at: Phase 04 gap closure plan ready
-Resume file: .planning/phases/04-live-conversation-mode/04-04-PLAN.md
+Last session: 2026-07-13T21:43:30.354Z
+Stopped at: Completed 04-04-PLAN.md
+Resume file: None
