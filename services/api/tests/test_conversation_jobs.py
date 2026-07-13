@@ -104,6 +104,14 @@ class _TTSProvider:
         )()
 
 
+class _FailingResponseProvider:
+    provider_name = "fixture-response"
+
+    def generate_reply(self, prompt):
+        _ = prompt
+        raise RuntimeError("synthetic response failure")
+
+
 def assert_session_record(
     record: dict[str, object],
     *,
@@ -311,3 +319,67 @@ def test_synthesize_conversation_turn_leaves_an_interrupted_turn_recoverable(
     assert late_turn.status == interrupted_turn.status
     assert late_turn.cancel_state is not None
     assert turn_service.get_turn(queued_turn.turn_id).status == interrupted_turn.status
+
+
+def test_conversation_turn_failure_stays_scoped_to_the_turn_and_next_turn_completes(
+    tmp_path: Path,
+) -> None:
+    session_service = ConversationSessionService(storage_root=tmp_path / "sessions")
+    turn_service = ConversationTurnService(
+        storage_root=tmp_path / "turns",
+        session_service=session_service,
+    )
+    session = session_service.create_session()
+
+    failed_turn = turn_service.create_turn(
+        session.session_id,
+        audio_bytes=_wav_bytes(),
+        audio_mime_type="audio/wav",
+        tone_preset=GenerationTonePreset.CUTTING,
+        audio_filename="spoken-turn.wav",
+    )
+    failed_result = synthesizeConversationTurn(
+        failed_turn.turn_id,
+        turn_service=turn_service,
+        voice_profile=VESPER_GLASS_PROFILE,
+        vad_provider=_SpeechyVADProvider(),
+        stt_provider=_TranscriptProvider(),
+        response_provider=_FailingResponseProvider(),
+        tts_provider=_TTSProvider(),
+    )
+
+    assert failed_result.status == ConversationTurnStatus.FAILED
+    assert failed_result.attempt is not None
+    assert failed_result.attempt.error_message == "synthetic response failure"
+    assert turn_service.get_turn(failed_turn.turn_id).status == ConversationTurnStatus.FAILED
+
+    recovery_turn = turn_service.create_turn(
+        session.session_id,
+        audio_bytes=_wav_bytes(),
+        audio_mime_type="audio/wav",
+        tone_preset=GenerationTonePreset.CUTTING,
+        audio_filename="spoken-turn.wav",
+    )
+    recovery_result = synthesizeConversationTurn(
+        recovery_turn.turn_id,
+        turn_service=turn_service,
+        voice_profile=VESPER_GLASS_PROFILE,
+        vad_provider=_SpeechyVADProvider(),
+        stt_provider=_TranscriptProvider(),
+        response_provider=_ResponseProvider(),
+        tts_provider=_TTSProvider(),
+    )
+
+    assert recovery_result.status == ConversationTurnStatus.SUCCEEDED
+    assert recovery_result.response_text == "Naturally. I will keep this sharp. No borrowed masks."
+    assert recovery_result.playback_url == f"/conversation-turns/{recovery_turn.turn_id}/audio"
+
+    session_record = session_service.get_session(session.session_id)
+    assert [turn.turn_id for turn in session_record.turns] == [
+        recovery_turn.turn_id,
+        failed_turn.turn_id,
+    ]
+    assert [turn.status for turn in session_record.turns] == [
+        ConversationTurnStatus.SUCCEEDED,
+        ConversationTurnStatus.FAILED,
+    ]

@@ -114,6 +114,121 @@ async function installAudioPauseSpy(page: Page) {
   });
 }
 
+async function installConversationBargeInMock(page: Page) {
+  await page.addInitScript(() => {
+    class FakeMediaStreamTrack {
+      kind = "audio";
+      enabled = true;
+
+      stop() {}
+    }
+
+    class FakeMediaStream {
+      getTracks() {
+        return [new FakeMediaStreamTrack()];
+      }
+
+      getAudioTracks() {
+        return [new FakeMediaStreamTrack()];
+      }
+    }
+
+    class FakeAnalyserNode {
+      fftSize = 256;
+
+      connect() {}
+
+      disconnect() {}
+
+      getByteTimeDomainData(samples: Uint8Array) {
+        samples.fill(240);
+      }
+    }
+
+    class FakeMediaStreamSource {
+      connect() {}
+
+      disconnect() {}
+    }
+
+    class FakeAudioContext {
+      state: "running" | "suspended" | "closed" = "running";
+
+      resume() {
+        this.state = "running";
+        return Promise.resolve();
+      }
+
+      close() {
+        this.state = "closed";
+        return Promise.resolve();
+      }
+
+      createAnalyser() {
+        return new FakeAnalyserNode();
+      }
+
+      createMediaStreamSource(_stream: MediaStream) {
+        return new FakeMediaStreamSource();
+      }
+    }
+
+    Object.defineProperty(window.navigator, "mediaDevices", {
+      configurable: true,
+      value: {
+        getUserMedia: async () => new FakeMediaStream(),
+      },
+    });
+
+    Object.defineProperty(window, "AudioContext", {
+      configurable: true,
+      value: FakeAudioContext,
+    });
+  });
+}
+
+async function armConversationPlayback(
+  page: Page,
+  turnId: string,
+  pauseCallsLabel = "__pauseCalls",
+) {
+  await page
+    .getByLabel(`Conversation turn ${turnId} playback`)
+    .evaluate((audio, pauseCallsLabelValue: string) => {
+      let playing = false;
+
+      Object.defineProperty(audio, "paused", {
+        configurable: true,
+        get: () => !playing,
+      });
+
+      Object.defineProperty(audio, "ended", {
+        configurable: true,
+        get: () => false,
+      });
+
+      Object.defineProperty(audio, "play", {
+        configurable: true,
+        value: () => {
+          playing = true;
+          return Promise.resolve();
+        },
+      });
+
+      Object.defineProperty(audio, "pause", {
+        configurable: true,
+        value: () => {
+          playing = false;
+          const globalWindow = window as Window & { __pauseCalls?: number };
+          globalWindow[pauseCallsLabelValue as string] =
+            (globalWindow[pauseCallsLabelValue as string] ?? 0) + 1;
+        },
+      });
+
+      return audio.play();
+    }, pauseCallsLabel);
+}
+
 function buildWavBytes({
   sampleRateHz = 16_000,
   leadSilenceMs = 120,
@@ -536,6 +651,109 @@ test("interrupt control pauses playback and returns the panel to listening", asy
   await expect(page.getByRole("button", { name: "Interrupt" })).toBeVisible();
 
   await page.getByRole("button", { name: "Interrupt" }).click();
+
+  await expect.poll(async () =>
+    page.evaluate(() => (window as Window & { __pauseCalls?: number }).__pauseCalls ?? 0),
+  ).toBeGreaterThan(0);
+
+  expect(interruptRequests).toHaveLength(1);
+  expect(interruptRequests[0]).toMatchObject({
+    url: "http://127.0.0.1:3000/conversation-turns/conversation-turn-001/interrupt",
+    method: "POST",
+    body: null,
+  });
+
+  await expect(page.getByRole("status", { name: "Live conversation status" })).toContainText(
+    "Listening",
+  );
+  await expect(page.getByRole("list", { name: "Conversation turns" })).toContainText(
+    /Interrupted|Canceled/,
+  );
+});
+
+test("speech-triggered barge-in pauses playback and posts the interrupt route", async ({
+  page,
+}) => {
+  await installAudioPauseSpy(page);
+  await installConversationBargeInMock(page);
+
+  let sessionRecord = buildConversationSessionRecord("listening", [
+    buildConversationTurnRecord("succeeded"),
+  ]);
+  const interruptRequests: Array<{
+    url: string;
+    method: string;
+    body: string | null;
+  }> = [];
+
+  await page.route("**/conversation-sessions", async (route) => {
+    if (route.request().method() !== "POST") {
+      await route.fallback();
+      return;
+    }
+
+    await route.fulfill({
+      contentType: "application/json",
+      json: sessionRecord,
+    });
+  });
+
+  await page.route(`**/conversation-sessions/${CONVERSATION_SESSION_ID}`, async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      json: sessionRecord,
+    });
+  });
+
+  await page.route(
+    `**/conversation-turns/${CONVERSATION_TURN_ID}/interrupt`,
+    async (route) => {
+      interruptRequests.push({
+        url: route.request().url(),
+        method: route.request().method(),
+        body: route.request().postData(),
+      });
+
+      sessionRecord = buildConversationSessionRecord("listening", [
+        buildConversationTurnRecord("interrupted"),
+      ]);
+
+      await route.fulfill({
+        contentType: "application/json",
+        json: buildConversationTurnRecord("interrupted"),
+      });
+    },
+  );
+
+  await page.route(
+    `**/conversation-turns/${CONVERSATION_TURN_ID}`,
+    async (route) => {
+      await route.fulfill({
+        contentType: "application/json",
+        json: buildConversationTurnRecord("succeeded"),
+      });
+    },
+  );
+
+  await page.route(
+    `**/conversation-turns/${CONVERSATION_TURN_ID}/audio`,
+    async (route) => {
+      await route.fulfill({
+        contentType: "audio/wav",
+        body: buildWavBytes(),
+      });
+    },
+  );
+
+  await page.goto("/");
+
+  await expect(page.getByRole("button", { name: "Interrupt" })).toBeVisible();
+  await page.getByRole("button", { name: "Start conversation" }).click();
+  await expect(page.getByRole("status", { name: "Live conversation status" })).toContainText(
+    "Listening",
+  );
+
+  await armConversationPlayback(page, CONVERSATION_TURN_ID);
 
   await expect.poll(async () =>
     page.evaluate(() => (window as Window & { __pauseCalls?: number }).__pauseCalls ?? 0),
