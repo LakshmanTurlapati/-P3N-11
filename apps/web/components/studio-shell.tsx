@@ -680,6 +680,7 @@ export function StudioShell() {
   const [conversationError, setConversationError] = useState<string | null>(null);
   const [isStartingConversation, setIsStartingConversation] = useState(false);
   const [isStoppingConversation, setIsStoppingConversation] = useState(false);
+  const [isInterruptingConversation, setIsInterruptingConversation] = useState(false);
   const [transcriptDrafts, setTranscriptDrafts] = useState<Record<string, string>>({});
   const [captureMessage, setCaptureMessage] = useState("Ready to record");
   const [captureError, setCaptureError] = useState<string | null>(null);
@@ -873,9 +874,9 @@ export function StudioShell() {
     }
   }
 
-  async function startConversationSession() {
+  async function startConversationSession(): Promise<ConversationSessionDetailRecord | null> {
     if (isStartingConversation || conversationSession?.status === "listening") {
-      return;
+      return conversationSession;
     }
 
     setConversationError(null);
@@ -900,10 +901,12 @@ export function StudioShell() {
 
       setConversationSession(payload as ConversationSessionDetailRecord);
       setConversationError(null);
+      return payload as ConversationSessionDetailRecord;
     } catch (error) {
       setConversationError(
         error instanceof Error ? error.message : "Conversation session request failed.",
       );
+      return null;
     } finally {
       setIsStartingConversation(false);
     }
@@ -949,6 +952,93 @@ export function StudioShell() {
       );
     } finally {
       setIsStoppingConversation(false);
+    }
+  }
+
+  function pauseConversationPlayback() {
+    document.querySelectorAll("audio").forEach((audioElement) => {
+      try {
+        audioElement.pause();
+      } catch {
+        // Best-effort stop: if one audio element misbehaves, keep pausing the rest.
+      }
+    });
+  }
+
+  async function interruptConversationTurn() {
+    if (isInterruptingConversation) {
+      return;
+    }
+
+    setConversationError(null);
+    setIsInterruptingConversation(true);
+
+    try {
+      const shouldStartConversation =
+        conversationSession?.status !== "listening" || !conversationSession;
+      const activeSession =
+        !shouldStartConversation
+          ? conversationSession
+          : await startConversationSession();
+      const activeTurn =
+        activeSession?.turns.find(
+          (turn) =>
+            turn.status === "queued" ||
+            turn.status === "running" ||
+            turn.status === "succeeded",
+        ) ?? null;
+
+      if (!activeSession || !activeTurn) {
+        return;
+      }
+
+      if (shouldStartConversation) {
+        await new Promise<void>((resolve) => {
+          window.requestAnimationFrame(() => resolve());
+        });
+      }
+
+      pauseConversationPlayback();
+
+      const response = await fetch(
+        `/conversation-turns/${activeTurn.turn_id}/interrupt`,
+        {
+          method: "POST",
+        },
+      );
+      const payload = (await response.json()) as
+        | ConversationTurnRecord
+        | { detail?: string };
+      const responseError = payload as { detail?: string };
+
+      if (!response.ok) {
+        throw new Error(
+          typeof responseError.detail === "string"
+            ? responseError.detail
+            : "Conversation interrupt request failed.",
+        );
+      }
+
+      setConversationSession((currentSession) =>
+        currentSession
+          ? {
+              ...currentSession,
+              turns: upsertConversationTurnRecord(
+                currentSession.turns,
+                payload as ConversationTurnRecord,
+              ),
+            }
+          : currentSession,
+      );
+      setConversationError(null);
+    } catch (error) {
+      setConversationError(
+        error instanceof Error
+          ? error.message
+          : "Conversation interrupt request failed.",
+      );
+    } finally {
+      setIsInterruptingConversation(false);
     }
   }
 
@@ -1572,11 +1662,16 @@ export function StudioShell() {
                 errorMessage={conversationError}
                 isStarting={isStartingConversation}
                 isStopping={isStoppingConversation}
+                canInterruptConversation={true}
+                isInterruptingConversation={isInterruptingConversation}
                 onStartConversation={() => {
                   void startConversationSession();
                 }}
                 onStopConversation={() => {
                   void stopConversationSession();
+                }}
+                onInterruptConversation={() => {
+                  void interruptConversationTurn();
                 }}
               />
             </div>

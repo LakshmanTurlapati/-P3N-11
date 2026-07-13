@@ -12,6 +12,13 @@ export type ConversationTurnStatus =
   | "interrupted"
   | "canceled";
 
+type ConversationTurnCancelState = {
+  requested_at: string;
+  interrupted_at: string | null;
+  canceled_at: string | null;
+  reason: string | null;
+};
+
 export type ConversationTurnRecord = {
   turn_id: string;
   status: ConversationTurnStatus;
@@ -21,10 +28,15 @@ export type ConversationTurnRecord = {
   playback_url: string | null;
   tone_preset: ConversationTonePreset | null;
   latency_ms: number | null;
+  cancel_state: ConversationTurnCancelState | null;
   timing: {
     started_at: string;
     ended_at: string;
     duration_ms: number;
+    speech_end_to_transcript_ms: number | null;
+    response_text_ms: number | null;
+    tts_complete_ms: number | null;
+    playback_start_ms: number | null;
   };
 };
 
@@ -45,8 +57,11 @@ type ConversationSessionPanelProps = {
   errorMessage: string | null;
   isStarting: boolean;
   isStopping: boolean;
+  canInterruptConversation: boolean;
+  isInterruptingConversation: boolean;
   onStartConversation: () => void;
   onStopConversation: () => void;
+  onInterruptConversation: () => void;
 };
 
 function formatStatusLabel(status: string) {
@@ -54,7 +69,7 @@ function formatStatusLabel(status: string) {
 }
 
 function formatLatencyLabel(latencyMs: number | null) {
-  return latencyMs === null ? "Pending" : `${latencyMs} ms`;
+  return latencyMs === null ? "Pending" : `${(latencyMs / 1000).toFixed(2)} s`;
 }
 
 function formatToneLabel(tonePreset: ConversationTonePreset | null) {
@@ -73,7 +88,15 @@ function ConversationTurnCard({ turn }: { turn: ConversationTurnRecord }) {
     >
       <header className="attempt-card__header">
         <p className="attempt-card__kicker">{formatStatusLabel(turn.status)}</p>
-        <h3 id={`conversation-turn-${turn.turn_id}`}>{turn.turn_id}</h3>
+        <div className="conversation-turn-card__header-row">
+          <h3 id={`conversation-turn-${turn.turn_id}`}>{turn.turn_id}</h3>
+          <div
+            className="conversation-turn-card__latency-chip"
+            aria-label={`Conversation turn ${turn.turn_id} latency chip`}
+          >
+            {formatLatencyLabel(turn.latency_ms)}
+          </div>
+        </div>
       </header>
 
       <dl className="attempt-card__details">
@@ -92,10 +115,6 @@ function ConversationTurnCard({ turn }: { turn: ConversationTurnRecord }) {
         <div>
           <dt>Tone</dt>
           <dd>{formatToneLabel(turn.tone_preset)}</dd>
-        </div>
-        <div>
-          <dt>Latency</dt>
-          <dd>{formatLatencyLabel(turn.latency_ms)}</dd>
         </div>
       </dl>
 
@@ -119,8 +138,11 @@ export function ConversationSessionPanel({
   errorMessage,
   isStarting,
   isStopping,
+  canInterruptConversation,
+  isInterruptingConversation,
   onStartConversation,
   onStopConversation,
+  onInterruptConversation,
 }: ConversationSessionPanelProps) {
   const turns = session?.turns ?? [];
   const sessionStatusText = session ? formatStatusLabel(session.status) : "Ready to start";
@@ -192,6 +214,18 @@ export function ConversationSessionPanel({
         >
           {isStopping ? "Stopping..." : "Stop conversation"}
         </button>
+
+        {canInterruptConversation ? (
+          <button
+            type="button"
+            className="studio-action studio-action--secondary studio-action--interrupt"
+            disabled={isInterruptingConversation}
+            aria-busy={isInterruptingConversation}
+            onClick={onInterruptConversation}
+          >
+            {isInterruptingConversation ? "Interrupting..." : "Interrupt"}
+          </button>
+        ) : null}
       </div>
 
       <ol className="attempt-list conversation-turn-list" aria-label="Conversation turns">
