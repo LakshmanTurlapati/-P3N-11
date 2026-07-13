@@ -147,9 +147,16 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
+**Wave 1**
 
 - [ ] 04-01: Conversation session state and UI controls
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 04-02: Persona-safe LLM response and speech output loop
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 04-03: Interruption handling and turn latency metrics
 
 ### Phase 5: Model Benchmark and Selection
