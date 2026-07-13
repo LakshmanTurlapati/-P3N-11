@@ -19,13 +19,14 @@ Users can speak or write an input and receive a high-quality spoken response in 
 - [x] Phase 1 validated typed provider interfaces for VAD, STT, TTS, and speech-to-speech candidates.
 - [x] Phase 2 validated text input, fixed tone presets, queued real-provider generation, controlled audio playback, failure/retry states, and generated-audio metadata.
 - [x] Phase 3 validated browser microphone/upload input, session-scoped audio-turn jobs, VAD boundary metadata, provider-backed STT transcription, editable transcript review, and explicit transcript-to-composer handoff.
+- [x] Phase 4 validated inline live conversation mode with session controls, spoken responses, persona-safe response text, controlled playback, interruption, best-effort barge-in, latency chips, and failed-turn recovery.
 
 ### Active
 
 - [ ] Build a cloud-hosted web app MVP for internal experimentation.
 - [x] Provide a no-login first version focused on the speech loop and generation workflow.
 - [ ] Support a minimal studio workflow: choose a voice, provide text or audio input, choose a tone preset, and generate speech.
-- [ ] Include live conversation mode in v1 with microphone input, voice activity detection, interruption handling, and spoken responses.
+- [x] Include live conversation mode in v1 with microphone input, voice activity detection, interruption handling, and spoken responses.
 - [ ] Use only consented or licensed reference voices for cloning.
 - [ ] Start with one original theatrical trickster voice profile, then keep the architecture ready for multiple voices.
 - [ ] Support customizable tone rather than a single fixed persona prompt.
@@ -51,7 +52,7 @@ The voice style prompt can describe an original persona with traits such as meas
 
 ## Current State
 
-Phase 3 is complete as of 2026-07-12. The app has a direct no-login studio shell, server-owned Vesper Glass rights metadata, backend rights enforcement, text input, fixed tone presets, queued CosyVoice-backed generation with controlled playback, browser microphone and upload capture, session-scoped audio-turn jobs, VAD metadata, provider-backed STT transcription, editable transcript review, and explicit transcript-to-generation handoff. Phase 4 starts from that spoken-input loop and adds live conversation mode.
+Phase 4 is complete as of 2026-07-13. The app has a direct no-login studio shell, server-owned Vesper Glass rights metadata, backend rights enforcement, text input, fixed tone presets, queued CosyVoice-backed generation with controlled playback, browser microphone and upload capture, session-scoped audio-turn jobs, VAD metadata, provider-backed STT transcription, editable transcript review, explicit transcript-to-generation handoff, and inline live conversation mode with spoken responses, interruption, best-effort barge-in, latency metadata, and same-session recovery after failed turns.
 
 ## Constraints
 
@@ -80,6 +81,7 @@ Phase 3 is complete as of 2026-07-12. The app has a direct no-login studio shell
 | Keep Phase 2 generation queued-first | The browser should receive immediate job state while provider synthesis runs through the backend runtime and records success or failure | Implemented in Phase 2 |
 | Verify browser playback against live generation routes | Route mocks hid the real-provider gap; live Playwright coverage now proves `/generate`, status polling, and controlled audio playback together | Implemented in Phase 2 |
 | Keep Phase 3 spoken input session-scoped with explicit transcript handoff | Audio turns should support review and reuse without overwriting generation drafts or creating a durable library in the no-login MVP | Implemented in Phase 3 |
+| Keep Phase 4 live conversation inline with cooperative interruption | The first conversational proof should stay on the studio surface, reuse same-origin API routes, and preserve explicit Interrupt while adding best-effort speech-triggered barge-in | Implemented in Phase 4 |
 
 ## Evolution
 
@@ -99,4 +101,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-12 after Phase 3 completion*
+*Last updated: 2026-07-13 after Phase 4 completion*
