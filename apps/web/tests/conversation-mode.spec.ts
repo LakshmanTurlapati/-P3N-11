@@ -1,14 +1,208 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 
 const LIVE_TEST_TIMEOUT_MS = 120_000;
 const CONVERSATION_SESSION_ID = "conversation-session-001";
+const CONVERSATION_TURN_ID = "conversation-turn-001";
+const CONVERSATION_TURN_AUDIO_URL = `/conversation-turns/${CONVERSATION_TURN_ID}/audio`;
+const RESPONSE_TEXT =
+  "Well. That was almost interesting. Almost.";
 
-function buildConversationSessionRecord(status: "listening" | "stopped") {
+type ConversationTonePreset = "measured" | "cutting" | "grandiose";
+
+type ConversationTurnStatus =
+  | "queued"
+  | "running"
+  | "succeeded"
+  | "failed"
+  | "interrupted"
+  | "canceled";
+
+type ConversationTurnRecord = {
+  turn_id: string;
+  status: ConversationTurnStatus;
+  input_audio_url: string | null;
+  user_transcript_text: string | null;
+  response_text: string | null;
+  playback_url: string | null;
+  latency_ms: number | null;
+  timing: {
+    started_at: string;
+    ended_at: string;
+    duration_ms: number;
+  };
+};
+
+function buildConversationSessionRecord(
+  status: "listening" | "stopped",
+  turns: ConversationTurnRecord[] = [],
+) {
   return {
     session_id: CONVERSATION_SESSION_ID,
     status,
-    turns: [],
+    turns,
+    timing: {
+      started_at: "2026-07-12T03:00:00.000Z",
+      ended_at: "2026-07-12T03:00:00.000Z",
+      duration_ms: 0,
+    },
   };
+}
+
+function buildConversationTurnRecord(
+  status: ConversationTurnStatus,
+  overrides: Partial<ConversationTurnRecord> = {},
+) {
+  const baseRecord: ConversationTurnRecord = {
+    turn_id: CONVERSATION_TURN_ID,
+    status,
+    input_audio_url: `/conversation-turns/${CONVERSATION_TURN_ID}/input.wav`,
+    user_transcript_text:
+      status === "succeeded" ? "The line is ready." : "Pending transcript.",
+    response_text: status === "succeeded" ? RESPONSE_TEXT : null,
+    playback_url: status === "succeeded" ? CONVERSATION_TURN_AUDIO_URL : null,
+    latency_ms: status === "succeeded" ? 1240 : null,
+    timing: {
+      started_at: "2026-07-12T03:00:01.000Z",
+      ended_at: "2026-07-12T03:00:02.240Z",
+      duration_ms: status === "succeeded" ? 1240 : 0,
+    },
+  };
+
+  return {
+    ...baseRecord,
+    ...overrides,
+  };
+}
+
+function buildWavBytes({
+  sampleRateHz = 16_000,
+  leadSilenceMs = 120,
+  speechMs = 720,
+  trailSilenceMs = 120,
+  amplitude = 16_000,
+}: {
+  sampleRateHz?: number;
+  leadSilenceMs?: number;
+  speechMs?: number;
+  trailSilenceMs?: number;
+  amplitude?: number;
+} = {}): Buffer {
+  const samples: number[] = [];
+  for (const [durationMs, sampleValue] of [
+    [leadSilenceMs, 0],
+    [speechMs, amplitude],
+    [trailSilenceMs, 0],
+  ] as const) {
+    const sampleCount = Math.max(Math.floor((sampleRateHz * durationMs) / 1000), 1);
+    samples.push(...Array(sampleCount).fill(sampleValue));
+  }
+
+  const dataSize = samples.length * 2;
+  const buffer = Buffer.alloc(44 + dataSize);
+  buffer.write("RIFF", 0);
+  buffer.writeUInt32LE(36 + dataSize, 4);
+  buffer.write("WAVE", 8);
+  buffer.write("fmt ", 12);
+  buffer.writeUInt32LE(16, 16);
+  buffer.writeUInt16LE(1, 20);
+  buffer.writeUInt16LE(1, 22);
+  buffer.writeUInt32LE(sampleRateHz, 24);
+  buffer.writeUInt32LE(sampleRateHz * 2, 28);
+  buffer.writeUInt16LE(2, 32);
+  buffer.writeUInt16LE(16, 34);
+  buffer.write("data", 36);
+  buffer.writeUInt32LE(dataSize, 40);
+
+  samples.forEach((sample, index) => {
+    buffer.writeInt16LE(sample, 44 + index * 2);
+  });
+
+  return buffer;
+}
+
+async function installMediaRecorderMock(page: Page, wavBytes: Buffer) {
+  await page.addInitScript(
+    ({ wavBytesBase64 }) => {
+      class FakeMediaStreamTrack {
+        kind = "audio";
+        enabled = true;
+
+        stop() {}
+      }
+
+      class FakeMediaStream {
+        getTracks() {
+          return [new FakeMediaStreamTrack()];
+        }
+
+        getAudioTracks() {
+          return [new FakeMediaStreamTrack()];
+        }
+      }
+
+      class FakeMediaRecorder {
+        stream: MediaStream;
+        state: "inactive" | "recording";
+        mimeType: string;
+        ondataavailable?: (event: { data: Blob }) => void;
+        onstop?: (event: Event) => void;
+        onstart?: (event: Event) => void;
+
+        static isTypeSupported(type: string): boolean {
+          return type === "audio/webm" || type === "audio/webm;codecs=opus";
+        }
+
+        constructor(stream: MediaStream, options: { mimeType?: string } = {}) {
+          this.stream = stream;
+          this.state = "inactive";
+          this.mimeType = options.mimeType ? "audio/wav" : "audio/wav";
+        }
+
+        start(): void {
+          this.state = "recording";
+          if (typeof this.onstart === "function") {
+            this.onstart(new Event("start"));
+          }
+        }
+
+        stop(): void {
+          this.state = "inactive";
+          if (typeof this.ondataavailable === "function") {
+            this.ondataavailable({
+              data: new Blob(
+                [
+                  Uint8Array.from(atob(wavBytesBase64), (character) =>
+                    character.charCodeAt(0),
+                  ),
+                ],
+                {
+                  type: "audio/wav",
+                },
+              ),
+            });
+          }
+          if (typeof this.onstop === "function") {
+            this.onstop(new Event("stop"));
+          }
+        }
+      }
+
+      Object.defineProperty(window.navigator, "mediaDevices", {
+        configurable: true,
+        value: {
+          getUserMedia: async () => new FakeMediaStream(),
+        },
+      });
+
+      Object.defineProperty(window, "MediaRecorder", {
+        configurable: true,
+        value: FakeMediaRecorder,
+      });
+    },
+    {
+      wavBytesBase64: wavBytes.toString("base64"),
+    },
+  );
 }
 
 test.describe.configure({ timeout: LIVE_TEST_TIMEOUT_MS });
@@ -94,4 +288,128 @@ test("start conversation keeps the live panel inline on /", async ({ page }) => 
     method: "POST",
     body: null,
   });
+});
+
+test("response playback shows up in the live conversation turn card", async ({
+  page,
+}) => {
+  const recordingWav = buildWavBytes();
+  await installMediaRecorderMock(page, recordingWav);
+
+  let sessionRecord = buildConversationSessionRecord("listening");
+
+  await page.route("**/conversation-sessions", async (route) => {
+    if (route.request().method() !== "POST") {
+      await route.fallback();
+      return;
+    }
+
+    await route.fulfill({
+      contentType: "application/json",
+      json: sessionRecord,
+    });
+  });
+
+  await page.route(`**/conversation-sessions/${CONVERSATION_SESSION_ID}`, async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      json: sessionRecord,
+    });
+  });
+
+  await page.route("**/conversation-turns", async (route) => {
+    if (route.request().method() !== "POST") {
+      await route.fallback();
+      return;
+    }
+
+    expect(route.request().headers()["x-conversation-session-id"]).toBe(
+      CONVERSATION_SESSION_ID,
+    );
+    expect(route.request().headers()["x-audio-capture-source"]).toBe("recording");
+    expect(route.request().headers()["x-voice-id"]).toBe("vesper-glass");
+    expect(route.request().headers()["x-tone-preset"]).toBe("cutting");
+
+    sessionRecord = buildConversationSessionRecord("listening", [
+      buildConversationTurnRecord("queued", {
+        response_text: null,
+        playback_url: null,
+        latency_ms: null,
+      }),
+    ]);
+
+    await route.fulfill({
+      contentType: "application/json",
+      json: buildConversationTurnRecord("queued", {
+        response_text: null,
+        playback_url: null,
+        latency_ms: null,
+      }),
+    });
+  });
+
+  await page.route(
+    `**/conversation-turns/${CONVERSATION_TURN_ID}`,
+    async (route) => {
+      await route.fulfill({
+        contentType: "application/json",
+        json: buildConversationTurnRecord("succeeded"),
+      });
+    },
+  );
+
+  await page.route(
+    `**/conversation-turns/${CONVERSATION_TURN_ID}/audio`,
+    async (route) => {
+      await route.fulfill({
+        contentType: "audio/wav",
+        body: recordingWav,
+      });
+    },
+  );
+
+  await page.goto("/");
+
+  await expect(page.getByRole("button", { name: "Cutting" })).toBeVisible();
+  await page.getByRole("button", { name: "Cutting" }).click();
+
+  await page.getByRole("button", { name: "Start conversation" }).click();
+  await expect(page.getByRole("status", { name: "Live conversation status" })).toContainText(
+    "Listening",
+  );
+
+  await page.getByRole("button", { name: "Record turn" }).click();
+
+  const conversationTurnResponsePromise = page.waitForResponse(
+    (response) =>
+      response.request().method() === "POST" &&
+      response.url().endsWith("/conversation-turns") &&
+      response.status() === 200,
+    {
+      timeout: 5_000,
+    },
+  );
+
+  await page.getByRole("button", { name: "Stop recording" }).click();
+
+  const conversationTurnResponse = await conversationTurnResponsePromise;
+  const conversationTurnRecord = (await conversationTurnResponse.json()) as {
+    turn_id: string;
+    status: ConversationTurnStatus;
+  };
+
+  expect(conversationTurnRecord.turn_id).toBe(CONVERSATION_TURN_ID);
+  expect(conversationTurnRecord.status).toBe("queued");
+
+  sessionRecord = buildConversationSessionRecord("listening", [
+    buildConversationTurnRecord("succeeded"),
+  ]);
+
+  await expect(page.getByRole("list", { name: "Conversation turns" })).toContainText(
+    RESPONSE_TEXT,
+  );
+  await expect(page.getByLabel(`Conversation turn ${CONVERSATION_TURN_ID} playback`)).toHaveAttribute(
+    "src",
+    new RegExp(`${CONVERSATION_TURN_AUDIO_URL}$`),
+  );
 });
