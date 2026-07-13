@@ -26,4 +26,4 @@ include = ["services*"]
 minversion = "8.0"
 testpaths = ["services", "packages"]
 python_files = ["test_*.py", "*_test.py"]
-addopts = "-ra"
+addopts = "-ra --import-mode=importlib"

@@ -5,6 +5,8 @@ from enum import Enum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from services.api.app.schemas.generation import GenerationTonePreset
+
 
 def _now() -> datetime:
     return datetime.now(UTC)
@@ -32,6 +34,42 @@ class ConversationTurnStatus(str, Enum):
     FAILED = "failed"
     INTERRUPTED = "interrupted"
     CANCELED = "canceled"
+
+
+class ConversationTurnAttempt(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    status: ConversationTurnStatus = ConversationTurnStatus.QUEUED
+    provider_name: str | None = None
+    mime_type: str | None = None
+    error_message: str | None = None
+    input_audio_url: str | None = None
+    user_transcript_text: str | None = None
+    response_text: str | None = None
+    playback_url: str | None = None
+    tone_preset: GenerationTonePreset | None = None
+    audio_duration_ms: int | None = None
+    started_at: datetime = Field(default_factory=_now)
+    ended_at: datetime = Field(default_factory=_now)
+    duration_ms: int = Field(default=0, ge=0)
+
+    @field_validator(
+        "provider_name",
+        "mime_type",
+        "error_message",
+        "input_audio_url",
+        "user_transcript_text",
+        "response_text",
+        "playback_url",
+    )
+    @classmethod
+    def _normalize_optional_text(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        cleaned_value = value.strip()
+        if not cleaned_value:
+            return None
+        return cleaned_value
 
 
 class ConversationSessionTiming(BaseModel):
@@ -71,7 +109,9 @@ class ConversationTurnRecord(BaseModel):
     user_transcript_text: str | None = None
     response_text: str | None = None
     playback_url: str | None = None
+    tone_preset: GenerationTonePreset | None = None
     latency_ms: int | None = Field(default=None, ge=0)
+    attempt: ConversationTurnAttempt | None = None
     timing: ConversationTurnTiming = Field(default_factory=_default_turn_timing)
 
     @field_validator(
@@ -92,6 +132,70 @@ class ConversationTurnRecord(BaseModel):
     @field_validator("turn_id")
     @classmethod
     def _require_turn_id(cls, value: str) -> str:
+        if not value:
+            raise ValueError("must not be empty")
+        return value
+
+    @model_validator(mode="after")
+    def _require_succeeded_turn_fields(self) -> "ConversationTurnRecord":
+        if self.status == ConversationTurnStatus.SUCCEEDED:
+            missing_fields = [
+                field_name
+                for field_name, field_value in (
+                    ("input_audio_url", self.input_audio_url),
+                    ("user_transcript_text", self.user_transcript_text),
+                    ("response_text", self.response_text),
+                    ("playback_url", self.playback_url),
+                    ("latency_ms", self.latency_ms),
+                )
+                if field_value is None
+            ]
+            if missing_fields:
+                raise ValueError(
+                    "succeeded conversation turns must include input audio, transcript, "
+                    "response, playback, and latency metadata",
+                )
+        return self
+
+
+class ConversationResponsePrompt(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    voice_id: str = Field(min_length=1)
+    voice_display_name: str = Field(min_length=1)
+    boundary_note: str = Field(min_length=1)
+    prohibited_associations: list[str] = Field(min_length=1)
+    tone_preset: GenerationTonePreset
+    user_transcript_text: str = Field(min_length=1)
+    recent_turns: list[ConversationTurnRecord] = Field(default_factory=list)
+    persona_instructions: str = Field(min_length=1)
+
+    @field_validator("voice_id", "voice_display_name", "boundary_note", "user_transcript_text")
+    @classmethod
+    def _require_text(cls, value: str) -> str:
+        if not value:
+            raise ValueError("must not be empty")
+        return value
+
+    @field_validator("prohibited_associations")
+    @classmethod
+    def _normalize_associations(cls, values: list[str]) -> list[str]:
+        cleaned_values = [item.strip() for item in values if isinstance(item, str) and item.strip()]
+        if not cleaned_values:
+            raise ValueError("must not be empty")
+        return cleaned_values
+
+
+class ConversationResponseResult(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    provider_name: str = Field(min_length=1)
+    tone_preset: GenerationTonePreset
+    text: str = Field(min_length=1)
+
+    @field_validator("provider_name", "text")
+    @classmethod
+    def _require_text(cls, value: str) -> str:
         if not value:
             raise ValueError("must not be empty")
         return value
