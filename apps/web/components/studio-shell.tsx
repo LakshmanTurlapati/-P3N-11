@@ -145,6 +145,15 @@ type ConversationSessionDetailRecord = {
   };
 };
 
+type ConversationBargeInMonitor = {
+  timerId: number | null;
+  stream: MediaStream;
+  audioContext: AudioContext;
+  source: MediaStreamAudioSourceNode;
+  analyser: AnalyserNode;
+  samples: Uint8Array;
+};
+
 const tonePresetOptions: Array<{
   value: GenerationTonePreset;
   label: string;
@@ -695,6 +704,13 @@ export function StudioShell() {
   const pollTimerRef = useRef<number | null>(null);
   const audioTurnPollTimerRef = useRef<number | null>(null);
   const conversationSessionPollTimerRef = useRef<number | null>(null);
+  const conversationSessionRef = useRef<ConversationSessionDetailRecord | null>(
+    null,
+  );
+  const isInterruptingConversationRef = useRef(false);
+  const conversationBargeInMonitorRef = useRef<ConversationBargeInMonitor | null>(
+    null,
+  );
 
   const selectedVoice =
     voiceDisplaySeeds.find((voice) => voice.id === selectedVoiceId) ??
@@ -727,7 +743,15 @@ export function StudioShell() {
           ? "Listening"
           : conversationSession?.status === "stopped"
             ? "Stopped"
-            : "Ready to start";
+          : "Ready to start";
+
+  useEffect(() => {
+    conversationSessionRef.current = conversationSession;
+  }, [conversationSession]);
+
+  useEffect(() => {
+    isInterruptingConversationRef.current = isInterruptingConversation;
+  }, [isInterruptingConversation]);
 
   async function submitGeneration(submission: GenerationSubmission) {
     setIsSubmitting(true);
@@ -963,6 +987,142 @@ export function StudioShell() {
         // Best-effort stop: if one audio element misbehaves, keep pausing the rest.
       }
     });
+  }
+
+  function hasActiveConversationPlayback() {
+    return Array.from(document.querySelectorAll("audio")).some((audioElement) => {
+      if (!(audioElement instanceof HTMLMediaElement)) {
+        return false;
+      }
+
+      return !audioElement.paused && !audioElement.ended;
+    });
+  }
+
+  function stopConversationBargeInMonitor() {
+    const monitor = conversationBargeInMonitorRef.current;
+    if (!monitor) {
+      return;
+    }
+
+    if (monitor.timerId !== null) {
+      window.clearInterval(monitor.timerId);
+    }
+
+    try {
+      monitor.source.disconnect();
+    } catch {
+      // Best-effort cleanup.
+    }
+
+    try {
+      monitor.analyser.disconnect();
+    } catch {
+      // Best-effort cleanup.
+    }
+
+    monitor.stream.getTracks().forEach((track) => {
+      try {
+        track.stop();
+      } catch {
+        // Best-effort cleanup.
+      }
+    });
+
+    void monitor.audioContext.close().catch(() => undefined);
+    conversationBargeInMonitorRef.current = null;
+  }
+
+  async function startConversationBargeInMonitor(startRequest: { cancelled: boolean }) {
+    if (conversationBargeInMonitorRef.current) {
+      return;
+    }
+
+    const audioContextConstructor =
+      window.AudioContext ??
+      (
+        window as Window & {
+          webkitAudioContext?: typeof AudioContext;
+        }
+      ).webkitAudioContext ??
+      null;
+
+    if (!navigator.mediaDevices?.getUserMedia || !audioContextConstructor) {
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (startRequest.cancelled) {
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
+
+      const currentSession = conversationSessionRef.current;
+      if (!currentSession || currentSession.status !== "listening") {
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
+
+      const audioContext = new audioContextConstructor();
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      const source = audioContext.createMediaStreamSource(stream);
+      source.connect(analyser);
+      void audioContext.resume().catch(() => undefined);
+
+      const samples = new Uint8Array(analyser.fftSize);
+      const monitor: ConversationBargeInMonitor = {
+        timerId: null,
+        stream,
+        audioContext,
+        source,
+        analyser,
+        samples,
+      };
+      conversationBargeInMonitorRef.current = monitor;
+      if (startRequest.cancelled) {
+        stopConversationBargeInMonitor();
+        return;
+      }
+
+      const sampleBargeInEnergy = () => {
+        const latestSession = conversationSessionRef.current;
+        if (!latestSession || latestSession.status !== "listening") {
+          stopConversationBargeInMonitor();
+          return;
+        }
+
+        if (isInterruptingConversationRef.current || !hasActiveConversationPlayback()) {
+          return;
+        }
+
+        analyser.getByteTimeDomainData(samples);
+        const peakEnergy = samples.reduce(
+          (peak, sample) => Math.max(peak, Math.abs(sample - 128) / 128),
+          0,
+        );
+
+        if (peakEnergy < 0.35) {
+          return;
+        }
+
+        void handleConversationBargeIn();
+      };
+
+      monitor.timerId = window.setInterval(sampleBargeInEnergy, 150);
+    } catch {
+      stopConversationBargeInMonitor();
+    }
+  }
+
+  async function handleConversationBargeIn() {
+    if (isInterruptingConversationRef.current) {
+      return;
+    }
+
+    pauseConversationPlayback();
+    await interruptConversationTurn();
   }
 
   async function interruptConversationTurn() {
@@ -1372,6 +1532,9 @@ export function StudioShell() {
     }
 
     let cancelled = false;
+    const bargeInMonitorRequest = { cancelled: false };
+
+    void startConversationBargeInMonitor(bargeInMonitorRequest).catch(() => undefined);
 
     const pollConversationSession = async () => {
       try {
@@ -1425,10 +1588,13 @@ export function StudioShell() {
 
     return () => {
       cancelled = true;
+      bargeInMonitorRequest.cancelled = true;
       if (conversationSessionPollTimerRef.current !== null) {
         window.clearTimeout(conversationSessionPollTimerRef.current);
         conversationSessionPollTimerRef.current = null;
       }
+
+      stopConversationBargeInMonitor();
     };
   }, [conversationSession?.session_id, conversationSession?.status]);
 
