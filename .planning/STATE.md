@@ -2,18 +2,17 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 4
+current_phase: 04
 current_phase_name: Live Conversation Mode
 status: executing
-stopped_at: Phase 4 context gathered
-last_updated: "2026-07-13T01:45:56.572Z"
-last_activity: 2026-07-12
-last_activity_desc: Phase 03 complete, transitioned to Phase 4
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-07-13T03:33:02.968Z"
+last_activity: 2026-07-13
 progress:
   total_phases: 6
   completed_phases: 3
-  total_plans: 12
-  completed_plans: 12
+  total_plans: 15
+  completed_plans: 13
   percent: 50
 ---
 
@@ -24,14 +23,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-30)
 
 **Core value:** Users can speak or write an input and receive a high-quality spoken response in a controllable, consented character voice with low enough latency to feel conversational.
-**Current focus:** Phase 4 — Live Conversation Mode
+**Current focus:** Phase 04 — Live Conversation Mode
 
 ## Current Position
 
-Phase: 4 — Live Conversation Mode
-Plan: Not started
+Phase: 04 (Live Conversation Mode) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
-Last activity: 2026-07-12 — Phase 03 complete, transitioned to Phase 4
+Last activity: 2026-07-13
 
 Progress: [█████░░░░░] 50%
 
@@ -72,6 +71,7 @@ Progress: [█████░░░░░] 50%
 | Phase 03 P01 | 19m | 3 tasks | 13 files |
 | Phase 03 P02 | 13m 11s | 3 tasks | 11 files |
 | Phase 03-audio-input-and-turn-detection P03 | 29 min | 3 tasks | 11 files |
+| Phase 04 P01 | ~1h 10m | 3 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -126,6 +126,7 @@ Recent decisions affecting current work:
 - [Phase 03]: Use a faster-whisper-compatible STT provider behind STTProvider with deterministic fixture fallback so the worker/runtime boundary stays intact. — Keeps the worker boundary intact and makes local validation deterministic.
 - [Phase 03]: Persist transcript language and confidence on the same session-scoped audio-turn record that stores VAD metadata. — Keeps VAD and transcript review on the same auditable record.
 - [Phase 03]: Keep transcript review separate from the generation composer and require an explicit Use as generation text action to copy the transcript. — Prevents silent overwrites of the generation draft and matches the plan's no-overwrite handoff.
+- [Phase 4]: Keep live conversation inline on / instead of adding a separate route; use a server-owned SQLite session record as the authoritative conversation state and keep start/stop requests same-origin through Next.js rewrites. — This preserves the studio-first workflow and keeps the live panel maintainable as a sibling client component.
 
 ### Pending Todos
 
@@ -148,6 +149,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-12T21:16:59.754Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-live-conversation-mode/04-CONTEXT.md
+Last session: 2026-07-13T03:31:05.371Z
+Stopped at: Completed 04-01-PLAN.md
+Resume file: None

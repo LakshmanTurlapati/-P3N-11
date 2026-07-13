@@ -40,7 +40,7 @@ Requirements for the initial internal no-login web app. Each maps to exactly one
 
 ### Conversation
 
-- [ ] **CONV-01**: User can start a live conversation mode from the web app.
+- [x] **CONV-01**: User can start a live conversation mode from the web app.
 - [ ] **CONV-02**: User can speak a turn and receive a spoken response using the selected voice and tone.
 - [ ] **CONV-03**: System response text follows the original theatrical persona boundary without claiming to be a protected character or real person.
 - [ ] **CONV-04**: User can interrupt or cancel a spoken response and continue the conversation.
@@ -122,7 +122,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUD-02 | Phase 3 | Complete |
 | AUD-03 | Phase 3 | Complete |
 | AUD-04 | Phase 3 | Complete |
-| CONV-01 | Phase 4 | Pending |
+| CONV-01 | Phase 4 | Complete |
 | CONV-02 | Phase 4 | Pending |
 | CONV-03 | Phase 4 | Pending |
 | CONV-04 | Phase 4 | Pending |
