@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from services.api.app.schemas.conversation import (
+    ConversationTurnAttempt,
     ConversationResponsePrompt,
     ConversationResponseResult,
     ConversationTurnRecord,
@@ -20,7 +21,21 @@ def _build_prompt(tone_preset: GenerationTonePreset) -> ConversationResponseProm
         user_transcript_text="You sound amused.",
         response_text="Naturally.",
         playback_url="/conversation-turns/conversation-turn-001/audio",
+        tone_preset=GenerationTonePreset.MEASURED,
         latency_ms=1280,
+        attempt=ConversationTurnAttempt(
+            status=ConversationTurnStatus.SUCCEEDED,
+            provider_name="fixture-tts",
+            response_provider_name="fixture-responder",
+            tts_provider_name="fixture-tts",
+            mime_type="audio/wav",
+            input_audio_url="/conversation-turns/conversation-turn-001/input.wav",
+            user_transcript_text="You sound amused.",
+            response_text="Naturally.",
+            playback_url="/conversation-turns/conversation-turn-001/audio",
+            tone_preset=GenerationTonePreset.MEASURED,
+            audio_duration_ms=128,
+        ),
     )
 
     return buildConversationResponsePrompt(

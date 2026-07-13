@@ -22,6 +22,14 @@ const nextConfig: NextConfig = {
         destination: `${apiBaseUrl}/conversation-sessions/:path*`,
       },
       {
+        source: "/conversation-turns",
+        destination: `${apiBaseUrl}/conversation-turns`,
+      },
+      {
+        source: "/conversation-turns/:path*",
+        destination: `${apiBaseUrl}/conversation-turns/:path*`,
+      },
+      {
         source: "/voices/:path*",
         destination: `${apiBaseUrl}/voices/:path*`,
       },

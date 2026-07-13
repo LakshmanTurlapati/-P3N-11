@@ -41,6 +41,8 @@ class ConversationTurnAttempt(BaseModel):
 
     status: ConversationTurnStatus = ConversationTurnStatus.QUEUED
     provider_name: str | None = None
+    response_provider_name: str | None = None
+    tts_provider_name: str | None = None
     mime_type: str | None = None
     error_message: str | None = None
     input_audio_url: str | None = None
@@ -55,6 +57,8 @@ class ConversationTurnAttempt(BaseModel):
 
     @field_validator(
         "provider_name",
+        "response_provider_name",
+        "tts_provider_name",
         "mime_type",
         "error_message",
         "input_audio_url",
@@ -139,6 +143,9 @@ class ConversationTurnRecord(BaseModel):
     @model_validator(mode="after")
     def _require_succeeded_turn_fields(self) -> "ConversationTurnRecord":
         if self.status == ConversationTurnStatus.SUCCEEDED:
+            if self.attempt is None:
+                raise ValueError("succeeded conversation turns must include an attempt record")
+
             missing_fields = [
                 field_name
                 for field_name, field_value in (
@@ -146,7 +153,18 @@ class ConversationTurnRecord(BaseModel):
                     ("user_transcript_text", self.user_transcript_text),
                     ("response_text", self.response_text),
                     ("playback_url", self.playback_url),
+                    ("tone_preset", self.tone_preset),
                     ("latency_ms", self.latency_ms),
+                    ("attempt.provider_name", self.attempt.provider_name),
+                    ("attempt.response_provider_name", self.attempt.response_provider_name),
+                    ("attempt.tts_provider_name", self.attempt.tts_provider_name),
+                    ("attempt.mime_type", self.attempt.mime_type),
+                    ("attempt.input_audio_url", self.attempt.input_audio_url),
+                    ("attempt.user_transcript_text", self.attempt.user_transcript_text),
+                    ("attempt.response_text", self.attempt.response_text),
+                    ("attempt.playback_url", self.attempt.playback_url),
+                    ("attempt.tone_preset", self.attempt.tone_preset),
+                    ("attempt.audio_duration_ms", self.attempt.audio_duration_ms),
                 )
                 if field_value is None
             ]

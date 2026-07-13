@@ -1,5 +1,7 @@
 "use client";
 
+type ConversationTonePreset = "measured" | "cutting" | "grandiose";
+
 export type ConversationSessionStatus = "listening" | "stopped";
 
 export type ConversationTurnStatus =
@@ -17,6 +19,7 @@ export type ConversationTurnRecord = {
   user_transcript_text: string | null;
   response_text: string | null;
   playback_url: string | null;
+  tone_preset: ConversationTonePreset | null;
   latency_ms: number | null;
   timing: {
     started_at: string;
@@ -54,6 +57,14 @@ function formatLatencyLabel(latencyMs: number | null) {
   return latencyMs === null ? "Pending" : `${latencyMs} ms`;
 }
 
+function formatToneLabel(tonePreset: ConversationTonePreset | null) {
+  if (!tonePreset) {
+    return "Pending";
+  }
+
+  return tonePreset.charAt(0).toUpperCase() + tonePreset.slice(1);
+}
+
 function ConversationTurnCard({ turn }: { turn: ConversationTurnRecord }) {
   return (
     <article
@@ -77,6 +88,10 @@ function ConversationTurnCard({ turn }: { turn: ConversationTurnRecord }) {
         <div>
           <dt>Response</dt>
           <dd>{turn.response_text ?? "Pending"}</dd>
+        </div>
+        <div>
+          <dt>Tone</dt>
+          <dd>{formatToneLabel(turn.tone_preset)}</dd>
         </div>
         <div>
           <dt>Latency</dt>

@@ -10,7 +10,7 @@ import {
 
 import {
   ConversationSessionPanel,
-  type ConversationSessionRecord,
+  type ConversationTurnRecord,
 } from "./conversation-panel";
 import { voiceDisplaySeeds } from "@/lib/voice-registry";
 
@@ -134,6 +134,17 @@ type AudioTurnJobRecord = {
   attempt: AudioTurnAttemptRecord;
 };
 
+type ConversationSessionDetailRecord = {
+  session_id: string;
+  status: "listening" | "stopped";
+  turns: ConversationTurnRecord[];
+  timing: {
+    started_at: string;
+    ended_at: string;
+    duration_ms: number;
+  };
+};
+
 const tonePresetOptions: Array<{
   value: GenerationTonePreset;
   label: string;
@@ -253,6 +264,23 @@ function upsertRecord<T extends { job_id: string }>(
 
   return records.map((record) =>
     record.job_id === updatedRecord.job_id ? updatedRecord : record,
+  );
+}
+
+function upsertConversationTurnRecord(
+  records: ConversationTurnRecord[],
+  updatedRecord: ConversationTurnRecord,
+) {
+  const existingIndex = records.findIndex(
+    (record) => record.turn_id === updatedRecord.turn_id,
+  );
+
+  if (existingIndex === -1) {
+    return [updatedRecord, ...records];
+  }
+
+  return records.map((record) =>
+    record.turn_id === updatedRecord.turn_id ? updatedRecord : record,
   );
 }
 
@@ -648,7 +676,7 @@ export function StudioShell() {
   );
   const [spokenTurns, setSpokenTurns] = useState<AudioTurnJobRecord[]>([]);
   const [conversationSession, setConversationSession] =
-    useState<ConversationSessionRecord | null>(null);
+    useState<ConversationSessionDetailRecord | null>(null);
   const [conversationError, setConversationError] = useState<string | null>(null);
   const [isStartingConversation, setIsStartingConversation] = useState(false);
   const [isStoppingConversation, setIsStoppingConversation] = useState(false);
@@ -665,6 +693,7 @@ export function StudioShell() {
   const recordingTimerRef = useRef<number | null>(null);
   const pollTimerRef = useRef<number | null>(null);
   const audioTurnPollTimerRef = useRef<number | null>(null);
+  const conversationSessionPollTimerRef = useRef<number | null>(null);
 
   const selectedVoice =
     voiceDisplaySeeds.find((voice) => voice.id === selectedVoiceId) ??
@@ -750,6 +779,61 @@ export function StudioShell() {
     audioFilename: string,
   ) {
     const mimeType = audioBlob.type || "audio/webm";
+    if (conversationSession?.status === "listening" && conversationSession.session_id) {
+      try {
+        const response = await fetch("/conversation-turns", {
+          method: "POST",
+          headers: {
+            "Content-Type": mimeType,
+            "X-Audio-Capture-Source": captureSource,
+            "X-Audio-Filename": audioFilename,
+            "X-Conversation-Session-Id": conversationSession.session_id,
+            "X-Voice-Id": selectedVoice.id,
+            "X-Tone-Preset": selectedTonePreset,
+          },
+          body: audioBlob,
+        });
+
+        const payload = (await response.json()) as
+          | ConversationTurnRecord
+          | { detail?: string };
+        const responseError = payload as { detail?: string };
+
+        if (!response.ok) {
+          throw new Error(
+            typeof responseError.detail === "string"
+              ? responseError.detail
+              : "Conversation turn request failed.",
+          );
+        }
+
+        const conversationTurnRecord = payload as ConversationTurnRecord;
+        setConversationSession((currentSession) =>
+          currentSession
+            ? {
+                ...currentSession,
+                turns: upsertConversationTurnRecord(
+                  currentSession.turns,
+                  conversationTurnRecord,
+                ),
+              }
+            : currentSession,
+        );
+        setCaptureMessage("Conversation turn queued");
+        setCaptureError(null);
+        return conversationTurnRecord;
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Conversation turn request failed.";
+        setConversationError(message);
+        setCaptureMessage(message);
+        setCaptureError(message);
+        throw error;
+      }
+    }
+
     try {
       const response = await fetch("/audio-turns", {
         method: "POST",
@@ -802,7 +886,7 @@ export function StudioShell() {
         method: "POST",
       });
       const payload = (await response.json()) as
-        | ConversationSessionRecord
+        | ConversationSessionDetailRecord
         | GenerationResponseError;
       const responseError = payload as GenerationResponseError;
 
@@ -814,7 +898,7 @@ export function StudioShell() {
         );
       }
 
-      setConversationSession(payload as ConversationSessionRecord);
+      setConversationSession(payload as ConversationSessionDetailRecord);
       setConversationError(null);
     } catch (error) {
       setConversationError(
@@ -845,7 +929,7 @@ export function StudioShell() {
         },
       );
       const payload = (await response.json()) as
-        | ConversationSessionRecord
+        | ConversationSessionDetailRecord
         | GenerationResponseError;
       const responseError = payload as GenerationResponseError;
 
@@ -857,7 +941,7 @@ export function StudioShell() {
         );
       }
 
-      setConversationSession(payload as ConversationSessionRecord);
+      setConversationSession(payload as ConversationSessionDetailRecord);
       setConversationError(null);
     } catch (error) {
       setConversationError(
@@ -1188,6 +1272,76 @@ export function StudioShell() {
     };
   }, [activeAudioTurnId]);
 
+  useEffect(() => {
+    if (!conversationSession || conversationSession.status !== "listening") {
+      if (conversationSessionPollTimerRef.current !== null) {
+        window.clearTimeout(conversationSessionPollTimerRef.current);
+        conversationSessionPollTimerRef.current = null;
+      }
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    const pollConversationSession = async () => {
+      try {
+        const response = await fetch(
+          `/conversation-sessions/${conversationSession.session_id}`,
+        );
+        const payload = (await response.json()) as ConversationSessionDetailRecord & {
+          detail?: string;
+        };
+        const responseError = payload as GenerationResponseError;
+
+        if (!response.ok) {
+          throw new Error(
+            typeof responseError.detail === "string"
+              ? responseError.detail
+              : "Failed to poll conversation session.",
+          );
+        }
+
+        if (cancelled) {
+          return;
+        }
+
+        setConversationSession(payload as ConversationSessionDetailRecord);
+
+        if (payload.status === "listening") {
+          conversationSessionPollTimerRef.current = window.setTimeout(() => {
+            void pollConversationSession();
+          }, POLL_INTERVAL_MS);
+          return;
+        }
+
+        conversationSessionPollTimerRef.current = null;
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
+
+        setConversationError(
+          error instanceof Error
+            ? error.message
+            : "Failed to poll conversation session.",
+        );
+        conversationSessionPollTimerRef.current = null;
+      }
+    };
+
+    conversationSessionPollTimerRef.current = window.setTimeout(() => {
+      void pollConversationSession();
+    }, POLL_INTERVAL_MS);
+
+    return () => {
+      cancelled = true;
+      if (conversationSessionPollTimerRef.current !== null) {
+        window.clearTimeout(conversationSessionPollTimerRef.current);
+        conversationSessionPollTimerRef.current = null;
+      }
+    };
+  }, [conversationSession?.session_id, conversationSession?.status]);
+
   useEffect(
     () => () => {
       if (recordingTimerRef.current !== null) {
@@ -1198,6 +1352,11 @@ export function StudioShell() {
       if (audioTurnPollTimerRef.current !== null) {
         window.clearTimeout(audioTurnPollTimerRef.current);
         audioTurnPollTimerRef.current = null;
+      }
+
+      if (conversationSessionPollTimerRef.current !== null) {
+        window.clearTimeout(conversationSessionPollTimerRef.current);
+        conversationSessionPollTimerRef.current = null;
       }
 
       mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
