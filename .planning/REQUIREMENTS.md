@@ -48,11 +48,11 @@ Requirements for the initial internal no-login web app. Each maps to exactly one
 
 ### Benchmarks
 
-- [ ] **BEN-01**: System includes a fixed benchmark input set for voice quality, latency, and reliability comparisons.
+- [x] **BEN-01**: System includes a fixed benchmark input set for voice quality, latency, and reliability comparisons.
 - [ ] **BEN-02**: System can compare at least two VAD candidates or configurations using the benchmark set.
 - [ ] **BEN-03**: System can compare at least two TTS or voice-cloning candidates using the benchmark set.
 - [ ] **BEN-04**: System can record findings for end-to-end speech-to-speech candidates such as Chroma, MiniCPM-o, Qwen Omni, or Moshi when feasible.
-- [ ] **BEN-05**: System produces a recommendation report that includes quality, latency, GPU/runtime cost, license fit, and integration risk.
+- [x] **BEN-05**: System produces a recommendation report that includes quality, latency, GPU/runtime cost, license fit, and integration risk.
 
 ### Deployment
 
@@ -127,11 +127,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CONV-03 | Phase 4 | Complete |
 | CONV-04 | Phase 4 | Complete |
 | CONV-05 | Phase 4 | Complete |
-| BEN-01 | Phase 5 | Pending |
+| BEN-01 | Phase 5 | Complete |
 | BEN-02 | Phase 5 | Pending |
 | BEN-03 | Phase 5 | Pending |
 | BEN-04 | Phase 5 | Pending |
-| BEN-05 | Phase 5 | Pending |
+| BEN-05 | Phase 5 | Complete |
 | DEP-01 | Phase 6 | Pending |
 | DEP-02 | Phase 6 | Pending |
 | DEP-03 | Phase 6 | Pending |

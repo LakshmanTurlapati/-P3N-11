@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 5
-current_phase_name: Model Benchmark and Selection
+current_phase: 05
+current_phase_name: model-benchmark-and-selection
 status: executing
 stopped_at: Phase 5 context gathered
-last_updated: "2026-07-13T23:07:51.952Z"
-last_activity: 2026-07-13
-last_activity_desc: Phase 04 complete, transitioned to Phase 5
+last_updated: "2026-07-14T14:24:48.401Z"
+last_activity: 2026-07-14
+last_activity_desc: Phase 05 execution started
 progress:
   total_phases: 6
   completed_phases: 4
-  total_plans: 16
-  completed_plans: 16
+  total_plans: 19
+  completed_plans: 17
   percent: 67
 ---
 
@@ -28,10 +28,10 @@ See: .planning/PROJECT.md (updated 2026-06-30)
 
 ## Current Position
 
-Phase: 5 — Model Benchmark and Selection
-Plan: Not started
-Status: Ready to execute Phase 05
-Last activity: 2026-07-13 — Phase 04 complete, transitioned to Phase 5
+Phase: 05 (model-benchmark-and-selection) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
+Last activity: 2026-07-14 — Phase 05 execution started
 
 Progress: [███████░░░] 67%
 
@@ -77,6 +77,7 @@ Progress: [███████░░░] 67%
 | Phase 04 P02 | ~1h 45m | 3 tasks | 12 files |
 | Phase 04 P03 | 1h 3m | 3 tasks | 13 files |
 | Phase 04 P04 | 16m | 2 tasks | 5 files |
+| Phase 05 P01 | 25m | 3 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -140,6 +141,9 @@ Recent decisions affecting current work:
 - [Phase 04]: Render Interrupt as a first-class live-panel control and keep barge-in as best-effort fallback behavior. — Explicit user control must work even when VAD-based barge-in is unreliable.
 - [Phase 04]: Keep barge-in best-effort on the browser side and reuse the existing interrupt route. — Adds speech-triggered interruption without a new cancellation path.
 - [Phase 04]: Leave the backend turn-scoping logic unchanged because the forced failure regression showed the existing session recovery path already works. — Confirms the session boundary was already correct and only needed regression coverage.
+- [Phase 05]: Use a small fixed corpus with three tone-preserving text prompts and three audio paths worth of consent-safe rows backed by two tiny WAV fixtures.
+- [Phase 05]: Keep fixture paths resolved and containment-checked under services/speech-worker/benchmarks/corpus/fixtures.
+- [Phase 05]: Emit benchmark results as JSON, CSV, and escaped Markdown so later adapters can compare reruns without a dashboard.
 
 ### Pending Todos
 
@@ -162,6 +166,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-13T23:07:51.942Z
+Last session: 2026-07-14T14:23:55.899Z
 Stopped at: Phase 5 context gathered
 Resume file: .planning/phases/05-model-benchmark-and-selection/05-CONTEXT.md
