@@ -171,7 +171,7 @@ Plans:
 
 ### Phase 5: Model Benchmark and Selection
 
-**Goal**: Team can compare speech model candidates with fixed inputs and choose baseline providers using evidence.
+**Goal:** As a studio operator, I want to compare speech model candidates with fixed inputs and provider-safe benchmark evidence, so that I can choose baseline providers for conversational voice generation.
 **Mode:** mvp
 **UI hint**: no
 **Depends on**: Phase 4
@@ -202,7 +202,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 05-03: End-to-end speech model findings and provider recommendation
+- [x] 05-03: End-to-end speech model findings and provider recommendation
 
 ### Phase 6: Cloud GPU Deployment and Internal Beta Hardening
 
