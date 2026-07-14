@@ -184,12 +184,12 @@ Plans:
   4. Feasible end-to-end speech-to-speech candidates have recorded findings.
   5. Recommendation report includes quality, latency, GPU/runtime cost, license fit, and integration risk.
 
-**Plans**: 1/3 plans executed
+**Plans**: 2/3 plans executed
 
 Plans:
 
 - [x] 05-01-PLAN.md
-- [ ] 05-02-PLAN.md
+- [x] 05-02-PLAN.md
 - [ ] 05-03-PLAN.md
 
 **Wave 1**
@@ -198,7 +198,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 05-02: VAD and TTS candidate benchmark adapters
+- [x] 05-02: VAD and TTS candidate benchmark adapters
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -238,5 +238,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 2. Consented Studio Generation | 6/6 | Complete    | 2026-07-03 |
 | 3. Audio Input and Turn Detection | 3/3 | Complete    | 2026-07-12 |
 | 4. Live Conversation Mode | 4/4 | Complete    | 2026-07-13 |
-| 5. Model Benchmark and Selection | 1/3 | In Progress|  |
+| 5. Model Benchmark and Selection | 2/3 | In Progress|  |
 | 6. Cloud GPU Deployment and Internal Beta Hardening | 0/3 | Not started | - |
