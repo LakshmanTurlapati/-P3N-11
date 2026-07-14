@@ -187,9 +187,16 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
+**Wave 1**
 
 - [ ] 05-01: Benchmark corpus, metrics schema, and report format
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 05-02: VAD and TTS candidate benchmark adapters
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 05-03: End-to-end speech model findings and provider recommendation
 
 ### Phase 6: Cloud GPU Deployment and Internal Beta Hardening
