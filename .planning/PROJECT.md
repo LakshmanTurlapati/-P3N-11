@@ -20,6 +20,7 @@ Users can speak or write an input and receive a high-quality spoken response in 
 - [x] Phase 2 validated text input, fixed tone presets, queued real-provider generation, controlled audio playback, failure/retry states, and generated-audio metadata.
 - [x] Phase 3 validated browser microphone/upload input, session-scoped audio-turn jobs, VAD boundary metadata, provider-backed STT transcription, editable transcript review, and explicit transcript-to-composer handoff.
 - [x] Phase 4 validated inline live conversation mode with session controls, spoken responses, persona-safe response text, controlled playback, interruption, best-effort barge-in, latency chips, and failed-turn recovery.
+- [x] Phase 5 validated a fixed benchmark corpus, provider-contract VAD/TTS benchmark adapters, blocked-candidate evidence rows, S2S findings, and conservative recommendation reports for baseline model selection.
 
 ### Active
 
@@ -31,7 +32,6 @@ Users can speak or write an input and receive a high-quality spoken response in 
 - [ ] Start with one original theatrical trickster voice profile, then keep the architecture ready for multiple voices.
 - [ ] Support customizable tone rather than a single fixed persona prompt.
 - [ ] Build around open-source or open-weight speech components where practical, with rented GPU deployment in mind.
-- [ ] Benchmark model choices instead of hard-coding the product around a single speech stack too early.
 
 ### Out of Scope
 
@@ -52,7 +52,7 @@ The voice style prompt can describe an original persona with traits such as meas
 
 ## Current State
 
-Phase 4 is complete as of 2026-07-13. The app has a direct no-login studio shell, server-owned Vesper Glass rights metadata, backend rights enforcement, text input, fixed tone presets, queued CosyVoice-backed generation with controlled playback, browser microphone and upload capture, session-scoped audio-turn jobs, VAD metadata, provider-backed STT transcription, editable transcript review, explicit transcript-to-generation handoff, and inline live conversation mode with spoken responses, interruption, best-effort barge-in, latency metadata, and same-session recovery after failed turns.
+Phase 5 is complete as of 2026-07-14. The app has a direct no-login studio shell, server-owned Vesper Glass rights metadata, backend rights enforcement, text input, fixed tone presets, queued CosyVoice-backed generation with controlled playback, browser microphone and upload capture, session-scoped audio-turn jobs, VAD metadata, provider-backed STT transcription, editable transcript review, explicit transcript-to-generation handoff, inline live conversation mode with spoken responses, interruption, best-effort barge-in, latency metadata, same-session recovery after failed turns, and a benchmark package that compares provider candidates with fixed corpus inputs, hard safety/license gates, blocked-candidate evidence, S2S findings, and conservative baseline recommendations.
 
 ## Constraints
 
@@ -82,6 +82,7 @@ Phase 4 is complete as of 2026-07-13. The app has a direct no-login studio shell
 | Verify browser playback against live generation routes | Route mocks hid the real-provider gap; live Playwright coverage now proves `/generate`, status polling, and controlled audio playback together | Implemented in Phase 2 |
 | Keep Phase 3 spoken input session-scoped with explicit transcript handoff | Audio turns should support review and reuse without overwriting generation drafts or creating a durable library in the no-login MVP | Implemented in Phase 3 |
 | Keep Phase 4 live conversation inline with cooperative interruption | The first conversational proof should stay on the studio surface, reuse same-origin API routes, and preserve explicit Interrupt while adding best-effort speech-triggered barge-in | Implemented in Phase 4 |
+| Keep Phase 5 recommendations conservative and evidence-gated | Candidate model switches should require runnable evidence, license/safety/integration gates, and explicit blocker rows rather than research-only rankings | Implemented in Phase 5 |
 
 ## Evolution
 
@@ -101,4 +102,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-13 after Phase 4 completion*
+*Last updated: 2026-07-14 after Phase 5 completion*
