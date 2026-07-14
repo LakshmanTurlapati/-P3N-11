@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Consented Studio Generation** - Generate playable speech from text with one real provider and tone presets. (completed 2026-07-02)
 - [x] **Phase 3: Audio Input and Turn Detection** - Add mic/audio input, VAD, STT, and transcript inspection. (completed 2026-07-12)
 - [x] **Phase 4: Live Conversation Mode** - Combine speech input, persona response, TTS output, and interruption handling. (gap closure planned 2026-07-13) (completed 2026-07-13)
-- [ ] **Phase 5: Model Benchmark and Selection** - Compare VAD, TTS, and end-to-end speech candidates with repeatable metrics.
+- [x] **Phase 5: Model Benchmark and Selection** - Compare VAD, TTS, and end-to-end speech candidates with repeatable metrics. (completed 2026-07-14)
 - [ ] **Phase 6: Cloud GPU Deployment and Internal Beta Hardening** - Make the app deployable and debuggable on rented GPU infrastructure.
 
 ## Phase Details
@@ -184,13 +184,13 @@ Plans:
   4. Feasible end-to-end speech-to-speech candidates have recorded findings.
   5. Recommendation report includes quality, latency, GPU/runtime cost, license fit, and integration risk.
 
-**Plans**: 2/3 plans executed
+**Plans**: 3/3 plans complete
 
 Plans:
 
 - [x] 05-01-PLAN.md
 - [x] 05-02-PLAN.md
-- [ ] 05-03-PLAN.md
+- [x] 05-03-PLAN.md
 
 **Wave 1**
 
@@ -238,5 +238,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 2. Consented Studio Generation | 6/6 | Complete    | 2026-07-03 |
 | 3. Audio Input and Turn Detection | 3/3 | Complete    | 2026-07-12 |
 | 4. Live Conversation Mode | 4/4 | Complete    | 2026-07-13 |
-| 5. Model Benchmark and Selection | 2/3 | In Progress|  |
+| 5. Model Benchmark and Selection | 3/3 | Complete   | 2026-07-14 |
 | 6. Cloud GPU Deployment and Internal Beta Hardening | 0/3 | Not started | - |
