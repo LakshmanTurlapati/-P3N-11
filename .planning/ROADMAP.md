@@ -238,5 +238,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 2. Consented Studio Generation | 6/6 | Complete    | 2026-07-03 |
 | 3. Audio Input and Turn Detection | 3/3 | Complete    | 2026-07-12 |
 | 4. Live Conversation Mode | 4/4 | Complete    | 2026-07-13 |
-| 5. Model Benchmark and Selection | 3/3 | Complete   | 2026-07-14 |
+| 5. Model Benchmark and Selection | 3/3 | Complete    | 2026-07-14 |
 | 6. Cloud GPU Deployment and Internal Beta Hardening | 0/3 | Not started | - |
