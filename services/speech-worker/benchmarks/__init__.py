@@ -15,6 +15,13 @@ from .adapters import (
     run_tts_benchmark,
     run_vad_benchmark,
 )
+from .recommendation import (
+    CURRENT_LIVE_CONVERSATION_DEFAULT,
+    CURRENT_STUDIO_DEFAULT,
+    RecommendationDecision,
+    build_provider_recommendation,
+    should_switch_default_provider,
+)
 from .reporting import write_benchmark_report
 from .s2s_findings import SpeechToSpeechFinding, SpeechToSpeechScan, build_s2s_findings
 from .schemas import BenchmarkCorpus, BenchmarkCorpusItem
@@ -27,15 +34,20 @@ __all__ = [
     "BenchmarkCorpusItem",
     "CosyVoiceBenchmarkAdapter",
     "FIXTURES_DIR",
+    "CURRENT_LIVE_CONVERSATION_DEFAULT",
+    "CURRENT_STUDIO_DEFAULT",
     "MANIFEST_PATH",
     "REPORTS_DIR",
     "RUNS_DIR",
+    "RecommendationDecision",
     "SileroVADBenchmarkAdapter",
     "SpeechToSpeechFinding",
     "SpeechToSpeechScan",
     "TTSBenchmarkAdapter",
     "VADBenchmarkAdapter",
+    "build_provider_recommendation",
     "build_s2s_findings",
+    "should_switch_default_provider",
     "run_provider_benchmarks",
     "run_tts_benchmark",
     "run_vad_benchmark",

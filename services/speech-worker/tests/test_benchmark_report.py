@@ -384,7 +384,6 @@ def test_write_benchmark_report_serializes_new_sections_and_candidate_fields(
     assert "candidate\\|vad" in markdown
     assert "cosyvoice\\|baseline" in markdown
     assert "attempted setup: local ffmpeg check failed" in markdown
-    assert s2s_scan.findings[0].attempted_setup_evidence in markdown
+    assert s2s_scan.findings[0].attempted_setup_evidence.replace("`", "\\`") in markdown
     assert s2s_scan.findings[0].blocker_reason in markdown
     assert s2s_scan.findings[0].next_action in markdown
-

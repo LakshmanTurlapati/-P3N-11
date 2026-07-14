@@ -201,11 +201,14 @@ class BenchmarkRecommendation(BaseModel):
 
     studio_default_recommendation: str = Field(min_length=1)
     live_conversation_recommendation: str = Field(min_length=1)
+    default_switch_decision: Literal["keep-current-defaults", "switch-defaults"] = "keep-current-defaults"
+    default_switch_reason: str | None = None
     notes: str | None = None
 
     @field_validator(
         "studio_default_recommendation",
         "live_conversation_recommendation",
+        "default_switch_reason",
         "notes",
     )
     @classmethod

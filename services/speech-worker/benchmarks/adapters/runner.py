@@ -3,7 +3,9 @@ from __future__ import annotations
 from pathlib import Path
 
 from benchmarks.corpus import BenchmarkCorpus, REPORTS_DIR, load_benchmark_corpus
+from benchmarks.recommendation import build_provider_recommendation
 from benchmarks.reporting import write_benchmark_report
+from benchmarks.s2s_findings import build_s2s_findings
 from benchmarks.schemas import BenchmarkCandidateResult, BenchmarkRecommendation
 from providers.contracts import TTSProvider, VADProvider
 
@@ -35,22 +37,20 @@ def run_provider_benchmarks(
         alternate_adapter=tts_alternate_adapter,
         fixture_mode=fixture_mode,
     )
+    s2s_scan = build_s2s_findings()
+    s2s_rows = s2s_scan.candidate_rows()
 
-    combined_rows = [*vad_rows, *tts_rows]
-    recommendation = BenchmarkRecommendation(
-        studio_default_recommendation=tts_recommendation.studio_default_recommendation,
-        live_conversation_recommendation=vad_recommendation.live_conversation_recommendation,
-        notes=(
-            "Studio generation follows the runnable CosyVoice baseline while live "
-            "conversation follows the runnable Silero VAD baseline. FireRedVAD stays "
-            "blocked until package legitimacy and GPU-worker validation are confirmed, "
-            "and Qwen3-TTS stays blocked until the approved GPU-worker path is exercised."
-        ),
+    combined_rows = [*vad_rows, *tts_rows, *s2s_rows]
+    recommendation = build_provider_recommendation(
+        vad_rows=vad_rows,
+        tts_rows=tts_rows,
+        s2s_scan=s2s_scan,
     )
 
     write_benchmark_report(
         combined_rows,
         recommendation,
         output_dir=output_dir or REPORTS_DIR,
+        s2s_scan=s2s_scan,
     )
     return combined_rows, recommendation

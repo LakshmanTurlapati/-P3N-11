@@ -709,11 +709,209 @@
       },
       "status": "blocked",
       "total_duration_ms": 0
+    },
+    {
+      "artifact_references": [
+        "https://github.com/kyutai-labs/moshi",
+        "local workspace lacks torch, ffmpeg, and GPU access"
+      ],
+      "blocker_reason": "No sanctioned GPU-host execution or package verification has been captured in this workspace.",
+      "candidate_id": "moshi",
+      "corpus_item_id": "s2s-moshi",
+      "integration_gate": {
+        "blocked": true,
+        "evidence": "Research notes cite clear streaming/full-duplex docs, but `.venv` lacks torch, ffmpeg, and GPU access.",
+        "reason": "A capable GPU host is required before ranking this candidate.",
+        "status": "blocked"
+      },
+      "integration_risk": "medium",
+      "license_gate": {
+        "blocked": false,
+        "evidence": "Repo docs indicate a promising open stack, but the model/runtime path has not been validated in the local benchmark workspace.",
+        "reason": "License and repo documentation were reviewed.",
+        "status": "pass"
+      },
+      "next_action": "Run a sanctioned GPU-host scan and attach the external evidence reference before ranking Moshi.",
+      "provider_name": "Moshi",
+      "provider_type": "s2s",
+      "quality_scores": {
+        "artifact_level": 3,
+        "intelligibility": 3,
+        "naturalness": 3,
+        "persona_tone_fit": 3,
+        "safety_boundary_adherence": 4
+      },
+      "runtime_cost": "gpu host, bounded streaming runtime",
+      "safety_gate": {
+        "blocked": false,
+        "evidence": "No protected-character or real-performer imitation is planned.",
+        "reason": "The scan stays inside the consented original-voice boundary.",
+        "status": "pass"
+      },
+      "stage_timings_ms": {
+        "playback_ready_ms": 0,
+        "response_text_ms": 0,
+        "stt_ms": 0,
+        "total_wall_ms": 0,
+        "tts_ms": 0,
+        "vad_ms": 0
+      },
+      "status": "blocked",
+      "total_duration_ms": 0
+    },
+    {
+      "artifact_references": [
+        "https://github.com/OpenBMB/MiniCPM-V",
+        "no GPU-host evidence captured"
+      ],
+      "blocker_reason": "The candidate remains findings-only until a capable GPU host produces benchmark evidence.",
+      "candidate_id": "minicpm-o-4.5",
+      "corpus_item_id": "s2s-minicpm-o-4.5",
+      "integration_gate": {
+        "blocked": true,
+        "evidence": "Research notes describe clear streaming/full-duplex docs and a bounded runtime story, but no GPU-host run is captured.",
+        "reason": "A capable GPU host is required before ranking this candidate.",
+        "status": "blocked"
+      },
+      "integration_risk": "medium",
+      "license_gate": {
+        "blocked": false,
+        "evidence": "Repo docs and model notes are available, but no external GPU-host benchmark evidence has been captured.",
+        "reason": "License and repo documentation were reviewed.",
+        "status": "pass"
+      },
+      "next_action": "Capture an external evidence reference from a capable GPU host or keep MiniCPM-o blocked.",
+      "provider_name": "MiniCPM-o 4.5",
+      "provider_type": "s2s",
+      "quality_scores": {
+        "artifact_level": 2,
+        "intelligibility": 3,
+        "naturalness": 3,
+        "persona_tone_fit": 3,
+        "safety_boundary_adherence": 4
+      },
+      "runtime_cost": "gpu host, moderate memory footprint",
+      "safety_gate": {
+        "blocked": false,
+        "evidence": "No protected-character or real-performer imitation is planned.",
+        "reason": "The scan stays inside the consented original-voice boundary.",
+        "status": "pass"
+      },
+      "stage_timings_ms": {
+        "playback_ready_ms": 0,
+        "response_text_ms": 0,
+        "stt_ms": 0,
+        "total_wall_ms": 0,
+        "tts_ms": 0,
+        "vad_ms": 0
+      },
+      "status": "blocked",
+      "total_duration_ms": 0
+    },
+    {
+      "artifact_references": [
+        "https://github.com/FlashLabs-AI-Corp/FlashLabs-Chroma",
+        "CUDA 12.6 runtime unavailable locally"
+      ],
+      "blocker_reason": "Chroma is too heavy for this workspace and needs a different GPU host before it can be ranked.",
+      "candidate_id": "chroma",
+      "corpus_item_id": "s2s-chroma",
+      "integration_gate": {
+        "blocked": true,
+        "evidence": "Phase research flags CUDA 12.6 and the local workspace lacks GPU access for a real run.",
+        "reason": "A capable GPU host is required before ranking this candidate.",
+        "status": "blocked"
+      },
+      "integration_risk": "high",
+      "license_gate": {
+        "blocked": false,
+        "evidence": "The repo is visible, but the heavier runtime and CUDA dependency story makes it a late-scan candidate.",
+        "reason": "License and repo documentation were reviewed.",
+        "status": "pass"
+      },
+      "next_action": "Defer until a CUDA 12.6 worker is available and the benchmark slice can absorb the run.",
+      "provider_name": "FlashLabs Chroma",
+      "provider_type": "s2s",
+      "quality_scores": {
+        "artifact_level": 2,
+        "intelligibility": 2,
+        "naturalness": 2,
+        "persona_tone_fit": 2,
+        "safety_boundary_adherence": 4
+      },
+      "runtime_cost": "cuda 12.6 GPU host, heavier memory footprint",
+      "safety_gate": {
+        "blocked": false,
+        "evidence": "No protected-character or real-performer imitation is planned.",
+        "reason": "The scan stays inside the consented original-voice boundary.",
+        "status": "pass"
+      },
+      "stage_timings_ms": {
+        "playback_ready_ms": 0,
+        "response_text_ms": 0,
+        "stt_ms": 0,
+        "total_wall_ms": 0,
+        "tts_ms": 0,
+        "vad_ms": 0
+      },
+      "status": "blocked",
+      "total_duration_ms": 0
+    },
+    {
+      "artifact_references": [
+        "https://github.com/QwenLM/Qwen3-Omni",
+        "open streaming issues noted in research"
+      ],
+      "blocker_reason": "The phase should not absorb a Qwen3-Omni run until larger GPU-host evidence exists.",
+      "candidate_id": "qwen3-omni",
+      "corpus_item_id": "s2s-qwen3-omni",
+      "integration_gate": {
+        "blocked": true,
+        "evidence": "Research notes call out the 30B-A3B class and open streaming issues; the local host has no GPU runtime.",
+        "reason": "A capable GPU host is required before ranking this candidate.",
+        "status": "blocked"
+      },
+      "integration_risk": "high",
+      "license_gate": {
+        "blocked": false,
+        "evidence": "Official repo/docs are available, but the 30B-A3B-class stack needs a much larger runtime envelope.",
+        "reason": "License and repo documentation were reviewed.",
+        "status": "pass"
+      },
+      "next_action": "Revisit only after smaller S2S candidates or a Phase 6 GPU host make the runtime plausible.",
+      "provider_name": "Qwen3-Omni",
+      "provider_type": "s2s",
+      "quality_scores": {
+        "artifact_level": 1,
+        "intelligibility": 2,
+        "naturalness": 2,
+        "persona_tone_fit": 2,
+        "safety_boundary_adherence": 4
+      },
+      "runtime_cost": "30B-A3B-class GPU host, high memory footprint",
+      "safety_gate": {
+        "blocked": false,
+        "evidence": "No protected-character or real-performer imitation is planned.",
+        "reason": "The scan stays inside the consented original-voice boundary.",
+        "status": "pass"
+      },
+      "stage_timings_ms": {
+        "playback_ready_ms": 0,
+        "response_text_ms": 0,
+        "stt_ms": 0,
+        "total_wall_ms": 0,
+        "tts_ms": 0,
+        "vad_ms": 0
+      },
+      "status": "blocked",
+      "total_duration_ms": 0
     }
   ],
   "recommendation": {
+    "default_switch_decision": "keep-current-defaults",
+    "default_switch_reason": "No alternate candidate cleared the hard gates and evidence thresholds; keep the current studio and live conversation defaults until Phase 6 GPU-host validation.",
     "live_conversation_recommendation": "silero-vad",
-    "notes": "Studio generation follows the runnable CosyVoice baseline while live conversation follows the runnable Silero VAD baseline. FireRedVAD stays blocked until package legitimacy and GPU-worker validation are confirmed, and Qwen3-TTS stays blocked until the approved GPU-worker path is exercised.",
+    "notes": "Keep cosyvoice as the studio default until an alternate clears the hard gates and provides stronger benchmark evidence. Keep silero-vad as the live conversation default until an alternate clears the hard gates and provides stronger benchmark evidence. End-to-end S2S candidates remain findings-first only. Blocked scan evidence: Moshi: No sanctioned GPU-host execution or package verification has been captured in this workspace.; MiniCPM-o 4.5: The candidate remains findings-only until a capable GPU host produces benchmark evidence.; FlashLabs Chroma: Chroma is too heavy for this workspace and needs a different GPU host before it can be ranked.; Qwen3-Omni: The phase should not absorb a Qwen3-Omni run until larger GPU-host evidence exists.. Phase 6 GPU-host validation is required before any S2S migration is reconsidered.",
     "studio_default_recommendation": "cosyvoice"
   }
 }
