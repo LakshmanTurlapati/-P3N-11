@@ -37,6 +37,7 @@ key-files:
     - services/speech-worker/benchmarks/adapters/runner.py
     - services/speech-worker/benchmarks/adapters/tts.py
     - services/speech-worker/benchmarks/adapters/vad.py
+    - services/speech-worker/benchmarks/runner.py
     - services/speech-worker/benchmarks/reports/model-benchmark-recommendation.md
     - services/speech-worker/benchmarks/reports/model-benchmark-results.csv
     - services/speech-worker/benchmarks/reports/model-benchmark-results.json
@@ -45,6 +46,7 @@ key-files:
   modified:
     - services/speech-worker/benchmarks/__init__.py
     - services/speech-worker/benchmarks/reporting.py
+    - services/speech-worker/tests/test_benchmark_report.py
     - services/speech-worker/benchmarks/schemas.py
 
 key-decisions:
@@ -128,7 +130,14 @@ Each task was committed atomically:
 
 ## Deviations from Plan
 
-None. The phase stayed within the benchmark-adapter scope while preserving the approved TTS path and blocked VAD decision from the checkpoint responses.
+### Post-completion Correction
+
+**1. [Plan Artifact Fix] Restored the planned benchmark runner module path**
+- **Found during:** Post-completion spot-check before wave 3
+- **Issue:** The phase output listed `services/speech-worker/benchmarks/runner.py`, but the implementation only exposed `run_provider_benchmarks` from `services/speech-worker/benchmarks/adapters/runner.py`.
+- **Fix:** Added `services/speech-worker/benchmarks/runner.py` as a compatibility shim that re-exports `run_provider_benchmarks` from the adapters implementation, and added a regression test that imports the public module path.
+- **Files modified:** `services/speech-worker/benchmarks/runner.py`, `services/speech-worker/tests/test_benchmark_report.py`, `.planning/phases/05-model-benchmark-and-selection/05-02-SUMMARY.md`
+- **Commit:** `fix(05-02): restore planned benchmark runner module path`
 
 ## Self-Check: PASSED
 

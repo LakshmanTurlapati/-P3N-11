@@ -118,3 +118,12 @@ def test_write_benchmark_report_serializes_quality_latency_cost_and_risk_fields(
     assert "candidate\\|alpha" in markdown
     assert "cosyvoice|baseline" not in markdown
     assert "cosyvoice\\|baseline" in markdown
+
+
+def test_run_provider_benchmarks_is_available_from_public_module_path() -> None:
+    from benchmarks import run_provider_benchmarks as package_runner
+    from benchmarks.adapters import run_provider_benchmarks as adapters_runner
+    from benchmarks.runner import run_provider_benchmarks as public_runner
+
+    assert public_runner is package_runner
+    assert public_runner is adapters_runner
