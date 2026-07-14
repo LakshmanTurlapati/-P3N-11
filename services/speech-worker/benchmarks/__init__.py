@@ -16,6 +16,7 @@ from .adapters import (
     run_vad_benchmark,
 )
 from .reporting import write_benchmark_report
+from .s2s_findings import SpeechToSpeechFinding, SpeechToSpeechScan, build_s2s_findings
 from .schemas import BenchmarkCorpus, BenchmarkCorpusItem
 
 __all__ = [
@@ -30,8 +31,11 @@ __all__ = [
     "REPORTS_DIR",
     "RUNS_DIR",
     "SileroVADBenchmarkAdapter",
+    "SpeechToSpeechFinding",
+    "SpeechToSpeechScan",
     "TTSBenchmarkAdapter",
     "VADBenchmarkAdapter",
+    "build_s2s_findings",
     "run_provider_benchmarks",
     "run_tts_benchmark",
     "run_vad_benchmark",
