@@ -34,7 +34,8 @@ def _candidate_to_csv_row(candidate: BenchmarkCandidateResult) -> dict[str, str]
         "integration_gate_status": candidate.integration_gate.status,
         "runtime_cost": candidate.runtime_cost,
         "integration_risk": candidate.integration_risk,
-        "failure_blocker": candidate.failure_blocker or "",
+        "blocker_reason": candidate.blocker_reason or "",
+        "next_action": candidate.next_action or "",
         "quality_intelligibility": str(candidate.quality_scores.intelligibility),
         "quality_persona_tone_fit": str(candidate.quality_scores.persona_tone_fit),
         "quality_naturalness": str(candidate.quality_scores.naturalness),
@@ -132,15 +133,16 @@ def _blocked_rows(candidates: Sequence[BenchmarkCandidateResult]) -> list[str]:
         or candidate.integration_gate.blocked
     ]
     lines = [
-        "| Candidate | Blocker | Evidence |",
-        "| --- | --- | --- |",
+        "| Candidate | Blocker | Next Action | Evidence |",
+        "| --- | --- | --- | --- |",
     ]
     if not blocked_candidates:
-        lines.append("| None | None | None |")
+        lines.append("| None | None | None | None |")
         return lines
 
     for candidate in blocked_candidates:
-        blocker = candidate.failure_blocker or candidate.integration_gate.reason
+        blocker = candidate.blocker_reason or candidate.integration_gate.reason
+        next_action = candidate.next_action or candidate.integration_gate.evidence
         evidence = candidate.integration_gate.evidence
         lines.append(
             "| "
@@ -148,6 +150,7 @@ def _blocked_rows(candidates: Sequence[BenchmarkCandidateResult]) -> list[str]:
                 (
                     _escape_markdown_text(candidate.candidate_id),
                     _escape_markdown_text(blocker),
+                    _escape_markdown_text(next_action),
                     _escape_markdown_text(evidence),
                 )
             )
@@ -205,7 +208,8 @@ def write_benchmark_report(
         "integration_gate_status",
         "runtime_cost",
         "integration_risk",
-        "failure_blocker",
+        "blocker_reason",
+        "next_action",
         "quality_intelligibility",
         "quality_persona_tone_fit",
         "quality_naturalness",

@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator, model_validator
 
 BenchmarkModality = Literal["text", "audio"]
 BenchmarkTonePreset = Literal["measured", "cutting", "grandiose"]
@@ -141,7 +141,11 @@ class BenchmarkQualityScores(BaseModel):
 
 
 class BenchmarkCandidateResult(BaseModel):
-    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    model_config = ConfigDict(
+        extra="forbid",
+        str_strip_whitespace=True,
+        populate_by_name=True,
+    )
 
     candidate_id: str = Field(min_length=1)
     provider_type: str = Field(min_length=1)
@@ -156,7 +160,11 @@ class BenchmarkCandidateResult(BaseModel):
     integration_gate: BenchmarkGateResult
     runtime_cost: str = Field(min_length=1)
     integration_risk: str = Field(min_length=1)
-    failure_blocker: str | None = None
+    blocker_reason: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("blocker_reason", "failure_blocker"),
+    )
+    next_action: str | None = None
     artifact_references: list[str] = Field(default_factory=list)
 
     @field_validator(
@@ -166,7 +174,8 @@ class BenchmarkCandidateResult(BaseModel):
         "corpus_item_id",
         "runtime_cost",
         "integration_risk",
-        "failure_blocker",
+        "blocker_reason",
+        "next_action",
     )
     @classmethod
     def _normalize_optional_text(cls, value: str | None) -> str | None:
@@ -181,6 +190,10 @@ class BenchmarkCandidateResult(BaseModel):
     @classmethod
     def _normalize_artifact_references(cls, value: list[str]) -> list[str]:
         return [reference.strip() for reference in value if reference and reference.strip()]
+
+    @property
+    def failure_blocker(self) -> str | None:
+        return self.blocker_reason
 
 
 class BenchmarkRecommendation(BaseModel):

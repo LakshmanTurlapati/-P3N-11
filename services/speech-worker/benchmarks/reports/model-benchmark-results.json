@@ -1,0 +1,719 @@
+{
+  "candidates": [
+    {
+      "artifact_references": [
+        "fixture:clean-short.wav",
+        "window:120-760",
+        "segments:1",
+        "confidence:0.35"
+      ],
+      "blocker_reason": null,
+      "candidate_id": "silero-vad",
+      "corpus_item_id": "audio-clean-short-01",
+      "integration_gate": {
+        "blocked": false,
+        "evidence": "No torch or GPU runtime was required for the fixture path.",
+        "reason": "Provider contract accepted the benchmark audio and returned ordered speech segments.",
+        "status": "pass"
+      },
+      "integration_risk": "low",
+      "license_gate": {
+        "blocked": false,
+        "evidence": "Fixture or injected backend executed without a new model install.",
+        "reason": "Silero VAD stays behind the existing provider contract.",
+        "status": "pass"
+      },
+      "next_action": null,
+      "provider_name": "silero-vad",
+      "provider_type": "vad",
+      "quality_scores": {
+        "artifact_level": 2,
+        "intelligibility": 2,
+        "naturalness": 2,
+        "persona_tone_fit": 2,
+        "safety_boundary_adherence": 5
+      },
+      "runtime_cost": "cpu fixture path, low memory",
+      "safety_gate": {
+        "blocked": false,
+        "evidence": "Consent-safe benchmark corpus only.",
+        "reason": "Benchmark corpus items stay inside the original theatrical boundary.",
+        "status": "pass"
+      },
+      "stage_timings_ms": {
+        "playback_ready_ms": 22,
+        "response_text_ms": 0,
+        "stt_ms": 0,
+        "total_wall_ms": 22,
+        "tts_ms": 0,
+        "vad_ms": 22
+      },
+      "status": "passed",
+      "total_duration_ms": 920
+    },
+    {
+      "artifact_references": [
+        "https://github.com/FireRedTeam/FireRedVAD",
+        "GPU-worker runtime validation remains pending.",
+        "Approve a verified FireRedVAD source/package, validate it on the GPU worker, then rerun the benchmark before ranking it."
+      ],
+      "blocker_reason": "FireRedVAD is blocked until package legitimacy/download evidence and GPU-worker runtime compatibility are verified in the local workspace.",
+      "candidate_id": "fireredvad",
+      "corpus_item_id": "audio-clean-short-01",
+      "integration_gate": {
+        "blocked": true,
+        "evidence": "GPU-worker runtime validation remains pending.",
+        "reason": "FireRedVAD target runtime compatibility is not verified in this workspace.",
+        "status": "blocked"
+      },
+      "integration_risk": "high",
+      "license_gate": {
+        "blocked": true,
+        "evidence": "https://github.com/FireRedTeam/FireRedVAD",
+        "reason": "FireRedVAD package legitimacy and download evidence are not verified locally.",
+        "status": "blocked"
+      },
+      "next_action": "Approve a verified FireRedVAD source/package, validate it on the GPU worker, then rerun the benchmark before ranking it.",
+      "provider_name": "fireredvad",
+      "provider_type": "vad",
+      "quality_scores": {
+        "artifact_level": 1,
+        "intelligibility": 1,
+        "naturalness": 1,
+        "persona_tone_fit": 1,
+        "safety_boundary_adherence": 1
+      },
+      "runtime_cost": "blocked before runtime",
+      "safety_gate": {
+        "blocked": false,
+        "evidence": "Consent-safe benchmark corpus only.",
+        "reason": "Blocked candidates are not ranked ahead of the consent-safe baseline.",
+        "status": "pass"
+      },
+      "stage_timings_ms": {
+        "playback_ready_ms": 0,
+        "response_text_ms": 0,
+        "stt_ms": 0,
+        "total_wall_ms": 0,
+        "tts_ms": 0,
+        "vad_ms": 0
+      },
+      "status": "blocked",
+      "total_duration_ms": 0
+    },
+    {
+      "artifact_references": [
+        "fixture:clean-short.wav",
+        "window:100-990",
+        "segments:1",
+        "confidence:0.35"
+      ],
+      "blocker_reason": null,
+      "candidate_id": "silero-vad",
+      "corpus_item_id": "audio-clean-long-01",
+      "integration_gate": {
+        "blocked": false,
+        "evidence": "No torch or GPU runtime was required for the fixture path.",
+        "reason": "Provider contract accepted the benchmark audio and returned ordered speech segments.",
+        "status": "pass"
+      },
+      "integration_risk": "low",
+      "license_gate": {
+        "blocked": false,
+        "evidence": "Fixture or injected backend executed without a new model install.",
+        "reason": "Silero VAD stays behind the existing provider contract.",
+        "status": "pass"
+      },
+      "next_action": null,
+      "provider_name": "silero-vad",
+      "provider_type": "vad",
+      "quality_scores": {
+        "artifact_level": 2,
+        "intelligibility": 2,
+        "naturalness": 2,
+        "persona_tone_fit": 2,
+        "safety_boundary_adherence": 5
+      },
+      "runtime_cost": "cpu fixture path, low memory",
+      "safety_gate": {
+        "blocked": false,
+        "evidence": "Consent-safe benchmark corpus only.",
+        "reason": "Benchmark corpus items stay inside the original theatrical boundary.",
+        "status": "pass"
+      },
+      "stage_timings_ms": {
+        "playback_ready_ms": 28,
+        "response_text_ms": 0,
+        "stt_ms": 0,
+        "total_wall_ms": 28,
+        "tts_ms": 0,
+        "vad_ms": 28
+      },
+      "status": "passed",
+      "total_duration_ms": 1240
+    },
+    {
+      "artifact_references": [
+        "https://github.com/FireRedTeam/FireRedVAD",
+        "GPU-worker runtime validation remains pending.",
+        "Approve a verified FireRedVAD source/package, validate it on the GPU worker, then rerun the benchmark before ranking it."
+      ],
+      "blocker_reason": "FireRedVAD is blocked until package legitimacy/download evidence and GPU-worker runtime compatibility are verified in the local workspace.",
+      "candidate_id": "fireredvad",
+      "corpus_item_id": "audio-clean-long-01",
+      "integration_gate": {
+        "blocked": true,
+        "evidence": "GPU-worker runtime validation remains pending.",
+        "reason": "FireRedVAD target runtime compatibility is not verified in this workspace.",
+        "status": "blocked"
+      },
+      "integration_risk": "high",
+      "license_gate": {
+        "blocked": true,
+        "evidence": "https://github.com/FireRedTeam/FireRedVAD",
+        "reason": "FireRedVAD package legitimacy and download evidence are not verified locally.",
+        "status": "blocked"
+      },
+      "next_action": "Approve a verified FireRedVAD source/package, validate it on the GPU worker, then rerun the benchmark before ranking it.",
+      "provider_name": "fireredvad",
+      "provider_type": "vad",
+      "quality_scores": {
+        "artifact_level": 1,
+        "intelligibility": 1,
+        "naturalness": 1,
+        "persona_tone_fit": 1,
+        "safety_boundary_adherence": 1
+      },
+      "runtime_cost": "blocked before runtime",
+      "safety_gate": {
+        "blocked": false,
+        "evidence": "Consent-safe benchmark corpus only.",
+        "reason": "Blocked candidates are not ranked ahead of the consent-safe baseline.",
+        "status": "pass"
+      },
+      "stage_timings_ms": {
+        "playback_ready_ms": 0,
+        "response_text_ms": 0,
+        "stt_ms": 0,
+        "total_wall_ms": 0,
+        "tts_ms": 0,
+        "vad_ms": 0
+      },
+      "status": "blocked",
+      "total_duration_ms": 0
+    },
+    {
+      "artifact_references": [
+        "fixture:noisy-short.wav",
+        "window:140-820",
+        "segments:1",
+        "confidence:0.44"
+      ],
+      "blocker_reason": null,
+      "candidate_id": "silero-vad",
+      "corpus_item_id": "audio-noisy-short-01",
+      "integration_gate": {
+        "blocked": false,
+        "evidence": "No torch or GPU runtime was required for the fixture path.",
+        "reason": "Provider contract accepted the benchmark audio and returned ordered speech segments.",
+        "status": "pass"
+      },
+      "integration_risk": "low",
+      "license_gate": {
+        "blocked": false,
+        "evidence": "Fixture or injected backend executed without a new model install.",
+        "reason": "Silero VAD stays behind the existing provider contract.",
+        "status": "pass"
+      },
+      "next_action": null,
+      "provider_name": "silero-vad",
+      "provider_type": "vad",
+      "quality_scores": {
+        "artifact_level": 2,
+        "intelligibility": 2,
+        "naturalness": 2,
+        "persona_tone_fit": 2,
+        "safety_boundary_adherence": 5
+      },
+      "runtime_cost": "cpu fixture path, low memory",
+      "safety_gate": {
+        "blocked": false,
+        "evidence": "Consent-safe benchmark corpus only.",
+        "reason": "Benchmark corpus items stay inside the original theatrical boundary.",
+        "status": "pass"
+      },
+      "stage_timings_ms": {
+        "playback_ready_ms": 23,
+        "response_text_ms": 0,
+        "stt_ms": 0,
+        "total_wall_ms": 23,
+        "tts_ms": 0,
+        "vad_ms": 23
+      },
+      "status": "passed",
+      "total_duration_ms": 980
+    },
+    {
+      "artifact_references": [
+        "https://github.com/FireRedTeam/FireRedVAD",
+        "GPU-worker runtime validation remains pending.",
+        "Approve a verified FireRedVAD source/package, validate it on the GPU worker, then rerun the benchmark before ranking it."
+      ],
+      "blocker_reason": "FireRedVAD is blocked until package legitimacy/download evidence and GPU-worker runtime compatibility are verified in the local workspace.",
+      "candidate_id": "fireredvad",
+      "corpus_item_id": "audio-noisy-short-01",
+      "integration_gate": {
+        "blocked": true,
+        "evidence": "GPU-worker runtime validation remains pending.",
+        "reason": "FireRedVAD target runtime compatibility is not verified in this workspace.",
+        "status": "blocked"
+      },
+      "integration_risk": "high",
+      "license_gate": {
+        "blocked": true,
+        "evidence": "https://github.com/FireRedTeam/FireRedVAD",
+        "reason": "FireRedVAD package legitimacy and download evidence are not verified locally.",
+        "status": "blocked"
+      },
+      "next_action": "Approve a verified FireRedVAD source/package, validate it on the GPU worker, then rerun the benchmark before ranking it.",
+      "provider_name": "fireredvad",
+      "provider_type": "vad",
+      "quality_scores": {
+        "artifact_level": 1,
+        "intelligibility": 1,
+        "naturalness": 1,
+        "persona_tone_fit": 1,
+        "safety_boundary_adherence": 1
+      },
+      "runtime_cost": "blocked before runtime",
+      "safety_gate": {
+        "blocked": false,
+        "evidence": "Consent-safe benchmark corpus only.",
+        "reason": "Blocked candidates are not ranked ahead of the consent-safe baseline.",
+        "status": "pass"
+      },
+      "stage_timings_ms": {
+        "playback_ready_ms": 0,
+        "response_text_ms": 0,
+        "stt_ms": 0,
+        "total_wall_ms": 0,
+        "tts_ms": 0,
+        "vad_ms": 0
+      },
+      "status": "blocked",
+      "total_duration_ms": 0
+    },
+    {
+      "artifact_references": [
+        "fixture:noisy-short.wav",
+        "window:160-1080",
+        "segments:1",
+        "confidence:0.44"
+      ],
+      "blocker_reason": null,
+      "candidate_id": "silero-vad",
+      "corpus_item_id": "audio-noisy-expected-failure-01",
+      "integration_gate": {
+        "blocked": false,
+        "evidence": "No torch or GPU runtime was required for the fixture path.",
+        "reason": "Provider contract accepted the benchmark audio and returned ordered speech segments.",
+        "status": "pass"
+      },
+      "integration_risk": "low",
+      "license_gate": {
+        "blocked": false,
+        "evidence": "Fixture or injected backend executed without a new model install.",
+        "reason": "Silero VAD stays behind the existing provider contract.",
+        "status": "pass"
+      },
+      "next_action": null,
+      "provider_name": "silero-vad",
+      "provider_type": "vad",
+      "quality_scores": {
+        "artifact_level": 1,
+        "intelligibility": 1,
+        "naturalness": 1,
+        "persona_tone_fit": 1,
+        "safety_boundary_adherence": 5
+      },
+      "runtime_cost": "cpu fixture path, low memory",
+      "safety_gate": {
+        "blocked": false,
+        "evidence": "Consent-safe benchmark corpus only.",
+        "reason": "Benchmark corpus items stay inside the original theatrical boundary.",
+        "status": "pass"
+      },
+      "stage_timings_ms": {
+        "playback_ready_ms": 34,
+        "response_text_ms": 0,
+        "stt_ms": 0,
+        "total_wall_ms": 34,
+        "tts_ms": 0,
+        "vad_ms": 34
+      },
+      "status": "passed",
+      "total_duration_ms": 1500
+    },
+    {
+      "artifact_references": [
+        "https://github.com/FireRedTeam/FireRedVAD",
+        "GPU-worker runtime validation remains pending.",
+        "Approve a verified FireRedVAD source/package, validate it on the GPU worker, then rerun the benchmark before ranking it."
+      ],
+      "blocker_reason": "FireRedVAD is blocked until package legitimacy/download evidence and GPU-worker runtime compatibility are verified in the local workspace.",
+      "candidate_id": "fireredvad",
+      "corpus_item_id": "audio-noisy-expected-failure-01",
+      "integration_gate": {
+        "blocked": true,
+        "evidence": "GPU-worker runtime validation remains pending.",
+        "reason": "FireRedVAD target runtime compatibility is not verified in this workspace.",
+        "status": "blocked"
+      },
+      "integration_risk": "high",
+      "license_gate": {
+        "blocked": true,
+        "evidence": "https://github.com/FireRedTeam/FireRedVAD",
+        "reason": "FireRedVAD package legitimacy and download evidence are not verified locally.",
+        "status": "blocked"
+      },
+      "next_action": "Approve a verified FireRedVAD source/package, validate it on the GPU worker, then rerun the benchmark before ranking it.",
+      "provider_name": "fireredvad",
+      "provider_type": "vad",
+      "quality_scores": {
+        "artifact_level": 1,
+        "intelligibility": 1,
+        "naturalness": 1,
+        "persona_tone_fit": 1,
+        "safety_boundary_adherence": 1
+      },
+      "runtime_cost": "blocked before runtime",
+      "safety_gate": {
+        "blocked": false,
+        "evidence": "Consent-safe benchmark corpus only.",
+        "reason": "Blocked candidates are not ranked ahead of the consent-safe baseline.",
+        "status": "pass"
+      },
+      "stage_timings_ms": {
+        "playback_ready_ms": 0,
+        "response_text_ms": 0,
+        "stt_ms": 0,
+        "total_wall_ms": 0,
+        "tts_ms": 0,
+        "vad_ms": 0
+      },
+      "status": "blocked",
+      "total_duration_ms": 0
+    },
+    {
+      "artifact_references": [
+        "voice:vesper-glass",
+        "tone:measured",
+        "duration_ms:157",
+        "sample_rate_hz:24000",
+        "mime_type:audio/wav"
+      ],
+      "blocker_reason": null,
+      "candidate_id": "cosyvoice",
+      "corpus_item_id": "text-measured-01",
+      "integration_gate": {
+        "blocked": false,
+        "evidence": "No ffmpeg or GPU runtime was required for the fixture path.",
+        "reason": "Provider contract returned normalized WAV audio and duration metadata.",
+        "status": "pass"
+      },
+      "integration_risk": "low",
+      "license_gate": {
+        "blocked": false,
+        "evidence": "Fixture or injected backend executed without a new model install.",
+        "reason": "CosyVoice stays behind the existing provider contract.",
+        "status": "pass"
+      },
+      "next_action": null,
+      "provider_name": "cosyvoice",
+      "provider_type": "tts",
+      "quality_scores": {
+        "artifact_level": 5,
+        "intelligibility": 5,
+        "naturalness": 5,
+        "persona_tone_fit": 5,
+        "safety_boundary_adherence": 5
+      },
+      "runtime_cost": "single GPU class, moderate memory footprint",
+      "safety_gate": {
+        "blocked": false,
+        "evidence": "Consent-safe benchmark corpus only.",
+        "reason": "Tone presets stay inside the original theatrical boundary.",
+        "status": "pass"
+      },
+      "stage_timings_ms": {
+        "playback_ready_ms": 145,
+        "response_text_ms": 0,
+        "stt_ms": 0,
+        "total_wall_ms": 145,
+        "tts_ms": 140,
+        "vad_ms": 0
+      },
+      "status": "passed",
+      "total_duration_ms": 157
+    },
+    {
+      "artifact_references": [
+        "https://github.com/QwenLM/Qwen3-TTS | https://huggingface.co/Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+        "GPU-worker validation remains pending for the approved path.",
+        "Run the approved Qwen3-TTS source checkout with the Hugging Face weights on the GPU worker, capture timings and quality scores, and then rerun the benchmark."
+      ],
+      "blocker_reason": "Qwen3-TTS is approved on source/license grounds but remains blocked until GPU-worker runtime evidence is captured.",
+      "candidate_id": "qwen3-tts-12hz-0.6b-customvoice",
+      "corpus_item_id": "text-measured-01",
+      "integration_gate": {
+        "blocked": true,
+        "evidence": "GPU-worker validation remains pending for the approved path.",
+        "reason": "Local workspace intentionally does not execute the approved Qwen3-TTS candidate.",
+        "status": "blocked"
+      },
+      "integration_risk": "high",
+      "license_gate": {
+        "blocked": false,
+        "evidence": "https://github.com/QwenLM/Qwen3-TTS | https://huggingface.co/Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+        "reason": "The official Qwen3-TTS source checkout and model weights were approved in the checkpoint review.",
+        "status": "pass"
+      },
+      "next_action": "Run the approved Qwen3-TTS source checkout with the Hugging Face weights on the GPU worker, capture timings and quality scores, and then rerun the benchmark.",
+      "provider_name": "qwen3-tts",
+      "provider_type": "tts",
+      "quality_scores": {
+        "artifact_level": 1,
+        "intelligibility": 1,
+        "naturalness": 1,
+        "persona_tone_fit": 1,
+        "safety_boundary_adherence": 1
+      },
+      "runtime_cost": "blocked before runtime",
+      "safety_gate": {
+        "blocked": false,
+        "evidence": "Consent-safe benchmark corpus only.",
+        "reason": "The approved candidate path remains within the original voice boundary.",
+        "status": "pass"
+      },
+      "stage_timings_ms": {
+        "playback_ready_ms": 0,
+        "response_text_ms": 0,
+        "stt_ms": 0,
+        "total_wall_ms": 0,
+        "tts_ms": 0,
+        "vad_ms": 0
+      },
+      "status": "blocked",
+      "total_duration_ms": 0
+    },
+    {
+      "artifact_references": [
+        "voice:vesper-glass",
+        "tone:cutting",
+        "duration_ms:187",
+        "sample_rate_hz:24000",
+        "mime_type:audio/wav"
+      ],
+      "blocker_reason": null,
+      "candidate_id": "cosyvoice",
+      "corpus_item_id": "text-cutting-01",
+      "integration_gate": {
+        "blocked": false,
+        "evidence": "No ffmpeg or GPU runtime was required for the fixture path.",
+        "reason": "Provider contract returned normalized WAV audio and duration metadata.",
+        "status": "pass"
+      },
+      "integration_risk": "low",
+      "license_gate": {
+        "blocked": false,
+        "evidence": "Fixture or injected backend executed without a new model install.",
+        "reason": "CosyVoice stays behind the existing provider contract.",
+        "status": "pass"
+      },
+      "next_action": null,
+      "provider_name": "cosyvoice",
+      "provider_type": "tts",
+      "quality_scores": {
+        "artifact_level": 5,
+        "intelligibility": 5,
+        "naturalness": 5,
+        "persona_tone_fit": 5,
+        "safety_boundary_adherence": 5
+      },
+      "runtime_cost": "single GPU class, moderate memory footprint",
+      "safety_gate": {
+        "blocked": false,
+        "evidence": "Consent-safe benchmark corpus only.",
+        "reason": "Tone presets stay inside the original theatrical boundary.",
+        "status": "pass"
+      },
+      "stage_timings_ms": {
+        "playback_ready_ms": 145,
+        "response_text_ms": 0,
+        "stt_ms": 0,
+        "total_wall_ms": 145,
+        "tts_ms": 140,
+        "vad_ms": 0
+      },
+      "status": "passed",
+      "total_duration_ms": 187
+    },
+    {
+      "artifact_references": [
+        "https://github.com/QwenLM/Qwen3-TTS | https://huggingface.co/Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+        "GPU-worker validation remains pending for the approved path.",
+        "Run the approved Qwen3-TTS source checkout with the Hugging Face weights on the GPU worker, capture timings and quality scores, and then rerun the benchmark."
+      ],
+      "blocker_reason": "Qwen3-TTS is approved on source/license grounds but remains blocked until GPU-worker runtime evidence is captured.",
+      "candidate_id": "qwen3-tts-12hz-0.6b-customvoice",
+      "corpus_item_id": "text-cutting-01",
+      "integration_gate": {
+        "blocked": true,
+        "evidence": "GPU-worker validation remains pending for the approved path.",
+        "reason": "Local workspace intentionally does not execute the approved Qwen3-TTS candidate.",
+        "status": "blocked"
+      },
+      "integration_risk": "high",
+      "license_gate": {
+        "blocked": false,
+        "evidence": "https://github.com/QwenLM/Qwen3-TTS | https://huggingface.co/Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+        "reason": "The official Qwen3-TTS source checkout and model weights were approved in the checkpoint review.",
+        "status": "pass"
+      },
+      "next_action": "Run the approved Qwen3-TTS source checkout with the Hugging Face weights on the GPU worker, capture timings and quality scores, and then rerun the benchmark.",
+      "provider_name": "qwen3-tts",
+      "provider_type": "tts",
+      "quality_scores": {
+        "artifact_level": 1,
+        "intelligibility": 1,
+        "naturalness": 1,
+        "persona_tone_fit": 1,
+        "safety_boundary_adherence": 1
+      },
+      "runtime_cost": "blocked before runtime",
+      "safety_gate": {
+        "blocked": false,
+        "evidence": "Consent-safe benchmark corpus only.",
+        "reason": "The approved candidate path remains within the original voice boundary.",
+        "status": "pass"
+      },
+      "stage_timings_ms": {
+        "playback_ready_ms": 0,
+        "response_text_ms": 0,
+        "stt_ms": 0,
+        "total_wall_ms": 0,
+        "tts_ms": 0,
+        "vad_ms": 0
+      },
+      "status": "blocked",
+      "total_duration_ms": 0
+    },
+    {
+      "artifact_references": [
+        "voice:vesper-glass",
+        "tone:grandiose",
+        "duration_ms:193",
+        "sample_rate_hz:24000",
+        "mime_type:audio/wav"
+      ],
+      "blocker_reason": null,
+      "candidate_id": "cosyvoice",
+      "corpus_item_id": "text-grandiose-01",
+      "integration_gate": {
+        "blocked": false,
+        "evidence": "No ffmpeg or GPU runtime was required for the fixture path.",
+        "reason": "Provider contract returned normalized WAV audio and duration metadata.",
+        "status": "pass"
+      },
+      "integration_risk": "low",
+      "license_gate": {
+        "blocked": false,
+        "evidence": "Fixture or injected backend executed without a new model install.",
+        "reason": "CosyVoice stays behind the existing provider contract.",
+        "status": "pass"
+      },
+      "next_action": null,
+      "provider_name": "cosyvoice",
+      "provider_type": "tts",
+      "quality_scores": {
+        "artifact_level": 5,
+        "intelligibility": 5,
+        "naturalness": 5,
+        "persona_tone_fit": 5,
+        "safety_boundary_adherence": 5
+      },
+      "runtime_cost": "single GPU class, moderate memory footprint",
+      "safety_gate": {
+        "blocked": false,
+        "evidence": "Consent-safe benchmark corpus only.",
+        "reason": "Tone presets stay inside the original theatrical boundary.",
+        "status": "pass"
+      },
+      "stage_timings_ms": {
+        "playback_ready_ms": 145,
+        "response_text_ms": 0,
+        "stt_ms": 0,
+        "total_wall_ms": 145,
+        "tts_ms": 140,
+        "vad_ms": 0
+      },
+      "status": "passed",
+      "total_duration_ms": 193
+    },
+    {
+      "artifact_references": [
+        "https://github.com/QwenLM/Qwen3-TTS | https://huggingface.co/Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+        "GPU-worker validation remains pending for the approved path.",
+        "Run the approved Qwen3-TTS source checkout with the Hugging Face weights on the GPU worker, capture timings and quality scores, and then rerun the benchmark."
+      ],
+      "blocker_reason": "Qwen3-TTS is approved on source/license grounds but remains blocked until GPU-worker runtime evidence is captured.",
+      "candidate_id": "qwen3-tts-12hz-0.6b-customvoice",
+      "corpus_item_id": "text-grandiose-01",
+      "integration_gate": {
+        "blocked": true,
+        "evidence": "GPU-worker validation remains pending for the approved path.",
+        "reason": "Local workspace intentionally does not execute the approved Qwen3-TTS candidate.",
+        "status": "blocked"
+      },
+      "integration_risk": "high",
+      "license_gate": {
+        "blocked": false,
+        "evidence": "https://github.com/QwenLM/Qwen3-TTS | https://huggingface.co/Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+        "reason": "The official Qwen3-TTS source checkout and model weights were approved in the checkpoint review.",
+        "status": "pass"
+      },
+      "next_action": "Run the approved Qwen3-TTS source checkout with the Hugging Face weights on the GPU worker, capture timings and quality scores, and then rerun the benchmark.",
+      "provider_name": "qwen3-tts",
+      "provider_type": "tts",
+      "quality_scores": {
+        "artifact_level": 1,
+        "intelligibility": 1,
+        "naturalness": 1,
+        "persona_tone_fit": 1,
+        "safety_boundary_adherence": 1
+      },
+      "runtime_cost": "blocked before runtime",
+      "safety_gate": {
+        "blocked": false,
+        "evidence": "Consent-safe benchmark corpus only.",
+        "reason": "The approved candidate path remains within the original voice boundary.",
+        "status": "pass"
+      },
+      "stage_timings_ms": {
+        "playback_ready_ms": 0,
+        "response_text_ms": 0,
+        "stt_ms": 0,
+        "total_wall_ms": 0,
+        "tts_ms": 0,
+        "vad_ms": 0
+      },
+      "status": "blocked",
+      "total_duration_ms": 0
+    }
+  ],
+  "recommendation": {
+    "live_conversation_recommendation": "silero-vad",
+    "notes": "Studio generation follows the runnable CosyVoice baseline while live conversation follows the runnable Silero VAD baseline. FireRedVAD stays blocked until package legitimacy and GPU-worker validation are confirmed, and Qwen3-TTS stays blocked until the approved GPU-worker path is exercised.",
+    "studio_default_recommendation": "cosyvoice"
+  }
+}
