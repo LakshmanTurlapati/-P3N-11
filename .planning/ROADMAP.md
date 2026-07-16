@@ -222,10 +222,17 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
+**Wave 1**
 
 - [ ] 06-01: Service separation and deployment configuration
-- [ ] 06-02: Audio persistence, health checks, and observability
-- [ ] 06-03: Internal beta setup documentation and safety audit
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 06-02: Audio persistence and readiness checks
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 06-03: Structured logging, internal beta setup documentation, and safety audit
 
 ## Progress
 

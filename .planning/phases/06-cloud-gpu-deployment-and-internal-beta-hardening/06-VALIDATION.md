@@ -41,7 +41,7 @@ created: 2026-07-15
 | 06-01-W0 | 01 | 1 | DEP-01 | T-06-01 / T-06-04 | Compose keeps browser same-origin and separates web, API, and worker services | config / smoke | `docker compose config` | missing W0 | pending |
 | 06-02-W0 | 02 | 1 | DEP-02 | T-06-02 | API and worker share mounted storage without exposing raw file paths to the browser | unit / integration | `pytest services/api/tests/test_generation_jobs.py services/api/tests/test_audio_turn_jobs.py services/api/tests/test_conversation_jobs.py -x` | partial | pending |
 | 06-03-W0 | 02 | 1 | DEP-03 | T-06-03 | Readiness verifies storage, DB, voice registry, and worker config without model warmup | integration | `pytest services/api/tests/test_health.py services/speech-worker/tests/test_health.py -x` | missing W0 | pending |
-| 06-04-W0 | 02 | 1 | DEP-04 | T-06-05 | Logs include correlation IDs and safe stage metadata, not raw audio, prompt, or transcript payloads | unit | `pytest services/api/tests/test_logging.py -x` | missing W0 | pending |
+| 06-04-W0 | 03 | 3 | DEP-04 | T-06-05 | Logs include correlation IDs and safe stage metadata, not raw audio, prompt, or transcript payloads | unit | `pytest services/api/tests/test_logging.py -x` | missing W0 | pending |
 | 06-05-W0 | 03 | 2 | DEP-05 | T-06-06 | Runbook distinguishes fixture validation from GPU-host validation and preserves rights/persona boundaries | docs / manual | `rg -n "fixture|GPU|Docker Compose|health|logs|rights|persona" docs .env.example compose.yaml` | missing W0 | pending |
 
 ---
